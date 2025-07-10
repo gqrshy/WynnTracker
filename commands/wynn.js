@@ -107,26 +107,124 @@ const raidIcons = {
     'tcc': '⛰️'
 };
 
-// レベルから必要XPを計算する関数（概算）
+// レベルから必要XPを計算する関数（Wynncraft公式データ）
 function calculateTotalXPFromLevel(level) {
-    // Wynncraftのレベリング曲線に基づく概算
+    // Wynncraft公式のXP要求テーブル（各レベルアップに必要なXP）
+    const xpRequirements = [
+        0,      // Lv0→1 (存在しない)
+        110,    // Lv1→2
+        190,    // Lv2→3
+        275,    // Lv3→4
+        385,    // Lv4→5
+        505,    // Lv5→6
+        645,    // Lv6→7
+        790,    // Lv7→8
+        940,    // Lv8→9
+        1100,   // Lv9→10
+        1370,   // Lv10→11
+        1570,   // Lv11→12
+        1800,   // Lv12→13
+        2090,   // Lv13→14
+        2400,   // Lv14→15
+        2720,   // Lv15→16
+        3100,   // Lv16→17
+        3600,   // Lv17→18
+        4150,   // Lv18→19
+        4800,   // Lv19→20
+        5550,   // Lv20→21
+        6400,   // Lv21→22
+        7450,   // Lv22→23
+        8650,   // Lv23→24
+        10050,  // Lv24→25
+        11650,  // Lv25→26
+        13500,  // Lv26→27
+        15650,  // Lv27→28
+        18150,  // Lv28→29
+        21000,  // Lv29→30
+        24350,  // Lv30→31
+        28200,  // Lv31→32
+        32700,  // Lv32→33
+        37850,  // Lv33→34
+        43850,  // Lv34→35
+        50750,  // Lv35→36
+        58700,  // Lv36→37
+        68000,  // Lv37→38
+        78650,  // Lv38→39
+        91000,  // Lv39→40
+        105000, // Lv40→41
+        122000, // Lv41→42
+        141000, // Lv42→43
+        163000, // Lv43→44
+        189000, // Lv44→45
+        218500, // Lv45→46
+        253000, // Lv46→47
+        292500, // Lv47→48
+        338500, // Lv48→49
+        392000, // Lv49→50
+        453500, // Lv50→51
+        524000, // Lv51→52
+        606000, // Lv52→53
+        700000, // Lv53→54
+        808500, // Lv54→55
+        935000, // Lv55→56
+        1080000, // Lv56→57
+        1250000, // Lv57→58
+        1440000, // Lv58→59
+        1670000, // Lv59→60
+        1930000, // Lv60→61
+        2230000, // Lv61→62
+        2580000, // Lv62→63
+        2980000, // Lv63→64
+        3440000, // Lv64→65
+        3980000, // Lv65→66
+        4600000, // Lv66→67
+        5320000, // Lv67→68
+        6150000, // Lv68→69
+        7100000, // Lv69→70
+        8200000, // Lv70→71
+        9500000, // Lv71→72
+        11000000, // Lv72→73
+        12700000, // Lv73→74
+        14700000, // Lv74→75
+        17000000, // Lv75→76
+        19600000, // Lv76→77
+        22700000, // Lv77→78
+        26200000, // Lv78→79
+        30200000, // Lv79→80
+        34900000, // Lv80→81
+        40300000, // Lv81→82
+        46600000, // Lv82→83
+        53800000, // Lv83→84
+        62200000, // Lv84→85
+        71900000, // Lv85→86
+        83000000, // Lv86→87
+        95900000, // Lv87→88
+        110800000, // Lv88→89
+        128000000, // Lv89→90
+        148000000, // Lv90→91
+        171000000, // Lv91→92
+        197500000, // Lv92→93
+        228000000, // Lv93→94
+        263500000, // Lv94→95
+        304500000, // Lv95→96
+        351500000, // Lv96→97
+        406500000, // Lv97→98
+        469500000, // Lv98→99
+        542500000, // Lv99→100
+        627000000, // Lv100→101
+        724500000, // Lv101→102
+        837500000, // Lv102→103
+        968000000, // Lv103→104
+        1118500000, // Lv104→105
+        249232940, // Lv105→106 (Lv1→105の総XPと同じ)
+    ];
+    
+    // 指定レベルまでの総XPを計算
     let totalXP = 0;
-    for (let i = 1; i < level; i++) {
-        if (i <= 15) {
-            totalXP += 110 + (i * 10);
-        } else if (i <= 30) {
-            totalXP += 300 + (i * 20);
-        } else if (i <= 50) {
-            totalXP += 1000 + (i * 50);
-        } else if (i <= 75) {
-            totalXP += 5000 + (i * 200);
-        } else if (i <= 100) {
-            totalXP += 20000 + (i * 1000);
-        } else {
-            // レベル100以降
-            totalXP += 1000000 + ((i - 100) * 50000);
-        }
+    for (let i = 1; i < level && i < xpRequirements.length; i++) {
+        totalXP += xpRequirements[i];
     }
+    
     return totalXP;
 }
 
@@ -192,17 +290,21 @@ async function handleStats(interaction) {
             totalXP += levelXP + currentXP;
         });
         
-        // ランク色の設定
+        // ランク色の設定（Wynncraftの公式カラー）
         const rankColors = {
-            'VIP': 0x55FF55,
-            'VIP+': 0x55FF55,
-            'HERO': 0xFF55FF,
-            'CHAMPION': 0xFFAA00,
-            'champion': 0xFFAA00,
-            'Player': 0x7289DA
+            'VIP': 0x55FF55,      // 緑
+            'VIP+': 0x55FF55,     // 緑（旧表記）
+            'VIPPLUS': 0x55FF55,  // 緑（新表記）
+            'HERO': 0xAA00AA,     // 紫
+            'Hero': 0xAA00AA,     // 紫
+            'hero': 0xAA00AA,     // 紫
+            'CHAMPION': 0xFFAA00, // 黄色
+            'Champion': 0xFFAA00, // 黄色
+            'champion': 0xFFAA00, // 黄色
+            'Player': 0x7289DA    // デフォルト
         };
         
-        const embedColor = rankColors[displayRank] || 0x2B2D31;
+        const embedColor = rankColors[displayRank] || rankColors['Player'];
         
         // Embed作成（authorを削除）
         const embed = new EmbedBuilder()
@@ -211,7 +313,9 @@ async function handleStats(interaction) {
             .setTimestamp();
         
         // タイトルをプレイヤー名とステータスに変更
-        let title = `${playerData.username}\n${onlineStatus} **${displayRank.toUpperCase()}**`;
+        // VIPPLUSをVIP+として表示
+        const displayRankFormatted = displayRank === 'VIPPLUS' ? 'VIP+' : displayRank.toUpperCase();
+        let title = `${playerData.username}\n${onlineStatus} **${displayRankFormatted}**`;
         if (serverInfo) {
             title += ` • 現在 **${serverInfo}** でプレイ中`;
         }

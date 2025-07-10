@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "deploy": "node deploy-commands.js"
+    "deploy": "node deploy-commands.js",
+    "test": "echo \"テストは後で追加します\" && exit 0",
+    "lint": "echo \"Lintは後で追加します\" && exit 0",
+    "version:patch": "npm version patch && git push && git push --tags",
+    "version:minor": "npm version minor && git push && git push --tags",
+    "version:major": "npm version major && git push && git push --tags"
   },
   "dependencies": {
     "discord.js": "^14.14.1",

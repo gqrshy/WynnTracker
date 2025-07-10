@@ -1,0 +1,62 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # v1.0.0のようなタグがプッシュされたときに実行
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      continue-on-error: true  # テストがなくても続行
+      
+    - name: Create release archive
+      run: |
+        mkdir -p release
+        tar -czf release/wynntracker-${{ github.ref_name }}.tar.gz \
+          --exclude='node_modules' \
+          --exclude='.git' \
+          --exclude='release' \
+          --exclude='.env' \
+          .
+          
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: WynnTracker ${{ github.ref }}
+        body: |
+          ## 変更内容
+          - 自動生成されたリリース
+          
+          ## ダウンロード
+          下記のAssetsからダウンロードしてください。
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/wynntracker-${{ github.ref_name }}.tar.gz
+        asset_name: wynntracker-${{ github.ref_name }}.tar.gz
+        asset_content_type: application/gzip

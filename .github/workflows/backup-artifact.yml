@@ -1,0 +1,58 @@
+name: Create Backup Artifact
+
+on:
+  push:
+    branches: [ main, master, develop ]
+
+jobs:
+  create-artifact:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get current version
+      id: version
+      run: |
+        # package.jsonからバージョンを取得
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        
+        # コミット数をビルド番号として使用
+        BUILD_NUMBER=$(git rev-list --count HEAD)
+        echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        
+        # 最終的なバージョン番号
+        FULL_VERSION="${CURRENT_VERSION}.${BUILD_NUMBER}"
+        echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Create timestamp
+      id: timestamp
+      run: echo "timestamp=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Create artifact
+      run: |
+        # 重要なファイルのみを含むアーカイブを作成
+        mkdir -p dist
+        tar -czf dist/wynntracker-v${{ steps.version.outputs.full_version }}.tar.gz \
+          --exclude='node_modules' \
+          --exclude='.git' \
+          --exclude='dist' \
+          --exclude='.env' \
+          *.js *.json README.md
+          
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: wynntracker-v${{ steps.version.outputs.full_version }}-${{ steps.timestamp.outputs.timestamp }}
+        path: dist/wynntracker-v${{ steps.version.outputs.full_version }}.tar.gz
+        retention-days: 30  # 30日間保持
