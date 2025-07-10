@@ -1,9 +1,10 @@
-# Wynncraft Discord Bot
+# WynnTracker
 
 WynncraftのプレイヤーステータスやAnnihilationイベントを管理するDiscord Bot
 
-## セットアップ
+## Inspired by
+https://nori.fish/
+https://www.wynnpool.com/annihilation
 
-1. 依存関係のインストール
-```bash
-npm install
+## Credits
+https://docs.wynncraft.com/docs/ - used for /wynn stats command
