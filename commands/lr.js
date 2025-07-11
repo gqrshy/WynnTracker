@@ -402,7 +402,7 @@ async function getCampMythicsWithPrices(campData) {
             for (const item of group.loot_items) {
                 if (item.rarity === 'Mythic') {
                     try {
-                        const priceData = await getItemMarketPrice(item.name);
+                        const priceData = await getItemMarketPrice(item.name, item.shiny || false);
                         mythics.push({
                             name: item.name,
                             shiny: item.shiny || false,
@@ -494,9 +494,12 @@ function formatMythicsWithPricesDiscord(mythics) {
 }
 
 // Trade Market価格を取得（unidentified価格優先）
-async function getItemMarketPrice(itemName) {
+async function getItemMarketPrice(itemName, isShiny = false) {
     try {
         const endpoint = `https://www.wynnventory.com/api/trademarket/item/${encodeURIComponent(itemName)}/price`;
+        
+        // Shinyアイテムの場合、shinyパラメータを追加
+        const params = isShiny ? { shiny: true } : {};
         
         const response = await axios.get(endpoint, {
             timeout: 5000,
@@ -504,7 +507,8 @@ async function getItemMarketPrice(itemName) {
                 'Authorization': `Api-Key ${config.wynnventoryApiKey}`,
                 'User-Agent': 'WynnTracker-Bot/1.0',
                 'Accept': 'application/json'
-            }
+            },
+            params: params
         });
         
         if (response.data) {
@@ -526,7 +530,7 @@ async function getItemMarketPrice(itemName) {
         return { averagePrice: 0, isUnidentified: false };
         
     } catch (error) {
-        console.error(`[ERROR] アイテム ${itemName} の価格取得エラー:`, error.response?.status || error.message);
+        console.error(`[ERROR] アイテム ${itemName} (${isShiny ? 'Shiny' : 'Regular'}) の価格取得エラー:`, error.response?.status || error.message);
         return { averagePrice: 0, isUnidentified: false };
     }
 }

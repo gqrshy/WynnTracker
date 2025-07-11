@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const config = require('./config'); // .json を削除
+const cron = require('node-cron');
 
 // Clientインスタンスの作成
 const client = new Client({ 
@@ -75,6 +76,24 @@ client.once('ready', async () => {
     // タイマーメッセージを復元
     if (annihilationCommand.restoreTimerMessage) {
         annihilationCommand.restoreTimerMessage(client);
+    }
+    
+    // ギルドランキングの週次リセットをセットアップ
+    // 毎週月曜日の午前0時（JST）に実行
+    cron.schedule('0 0 * * 1', async () => {
+        console.log('[INFO] ギルドランキングの週次リセットを開始します...');
+        const guildCommand = require('./commands/guild');
+        if (guildCommand.weeklyReset) {
+            await guildCommand.weeklyReset(client);
+        }
+    }, {
+        timezone: 'Asia/Tokyo'
+    });
+    
+    // 起動時に週次リセットが必要かチェック
+    const guildCommand = require('./commands/guild');
+    if (guildCommand.weeklyReset) {
+        await guildCommand.weeklyReset(client);
     }
 });
 

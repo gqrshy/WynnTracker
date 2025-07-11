@@ -13,9 +13,10 @@
     "version:major": "npm version major && git push && git push --tags"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
     "axios": "^1.6.5",
-    "dotenv": "^16.3.1"
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "node-cron": "^4.2.1"
   },
   "engines": {
     "node": ">=16.9.0"
