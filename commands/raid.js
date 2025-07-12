@@ -132,7 +132,8 @@ async function handleAspectPool(interaction) {
                                               selectedRarity === 'fabled' ? '<:fabled:1392871012470886511>' :
                                               selectedRarity === 'legendary' ? '<:legendary:1392870999565013118>' : '';
                             
-                            aspectList += `\u200b\n　**━━━ ${rarityEmoji} ${raidName} ━━━**\n`;
+                            const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
+                            aspectList += `\u200b\n　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
                             for (const aspectInfo of aspects) {
                                 aspectList += `　　• **${aspectInfo.name}**\n`;
                                 if (aspectInfo.description) {
@@ -150,7 +151,8 @@ async function handleAspectPool(interaction) {
                         // 全レアリティ表示の場合
                         const aspectGroups = extractAspectsByRarity(itemsToProcess);
                         let hasAnyAspects = false;
-                        let aspectList = `\u200b\n　**━━━ 🏛️ ${raidName} ━━━**\n`;
+                        const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
+                        let aspectList = `\u200b\n　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
                         
                         // Mythicアイテムを最初に表示
                         if (aspectGroups['Mythic'].length > 0) {
@@ -197,8 +199,9 @@ async function handleAspectPool(interaction) {
                                 inline: false
                             });
                         } else {
+                            const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
                             embed.addFields({
-                                name: `🏛️ ${raidName}`,
+                                name: `${raidEmoji} ${raidName}`,
                                 value: '　*No aspects in current pool*',
                                 inline: false
                             });
@@ -329,6 +332,14 @@ const CLASS_EMOJIS = {
     'Mage': '<:mage:1393313501237481503>',
     'Shaman': '<:shaman:1393312936616792074>',
     'Warrior': '<:warrior:1393313488075751465>'
+};
+
+// レイド名とDiscord絵文字IDのマッピング
+const RAID_EMOJIS = {
+    'NOL': '<:nol:1393435274712973412>',
+    'NOTG': '<:notg:1393435272653443133>',
+    'TCC': '<:tcc:1393435276701077564>',
+    'TNA': '<:tna:1393435278819196928>'
 };
 
 // アスペクト名からクラスを判定

@@ -33,13 +33,13 @@ const rest = new REST().setToken(config.token);
 
         console.log(`[SUCCESS] ${data.length} 個のギルドコマンドを正常に登録しました`);
 
-        // グローバルコマンドも同時に登録（1時間後に反映）
-        const globalData = await rest.put(
-            Routes.applicationCommands(config.clientId),
-            { body: commands },
-        );
+        // グローバルコマンドの登録を無効化（重複を防ぐため）
+        // const globalData = await rest.put(
+        //     Routes.applicationCommands(config.clientId),
+        //     { body: commands },
+        // );
 
-        console.log(`[SUCCESS] ${globalData.length} 個のグローバルコマンドを正常に登録しました（反映まで最大1時間）`);
+        // console.log(`[SUCCESS] ${globalData.length} 個のグローバルコマンドを正常に登録しました（反映まで最大1時間）`);
 
     } catch (error) {
         console.error('[ERROR] コマンド登録中にエラーが発生しました:', error);

@@ -8,7 +8,7 @@ const HELP_PAGES = [
         fields: [
             {
                 name: '📖 利用可能なコマンド',
-                value: '• `/lr` - ルートラン関連コマンド\n• `/raid` - レイド関連コマンド\n• `/wynn` - プレイヤー統計情報\n• `/guild` - ギルド関連コマンド\n• `/help` - このヘルプ画面',
+                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/anni`` - AI予測Annihilationタイマー（管理者限定）\n• ``/help`` - このヘルプ画面',
                 inline: false
             },
             {
@@ -24,25 +24,15 @@ const HELP_PAGES = [
         description: 'ルートラン（Lootrun）に関する情報を取得します。',
         fields: [
             {
-                name: '📊 `/lr lootpool [page] [camp]`',
-                value: '**説明:** 各キャンプのルートプールを表示\n' +
-                       '**オプション:**\n' +
-                       '• `page` (1-10): ページ番号 (1=最新、2=1週前)\n' +
-                       '• `camp`: 特定キャンプを選択\n' +
-                       '　- Canyon of the Lost - Thesead\n' +
-                       '　- Corkus Province - Corkus City\n' +
-                       '　- Molten Heights - Rodoroc\n' +
-                       '　- Sky Islands - Ahmsord\n' +
-                       '　- Silent Expanse - Lutho',
+                name: '📊 ``/lr lootpool``',
+                value: '各キャンプのルートプールを表示\n' +
+                       '**オプション:** ``page`` (1-10) | ``camp`` (キャンプ選択)',
                 inline: false
             },
             {
-                name: '💰 `/lr mythranking`',
-                value: '**説明:** Mythicアイテムの相場ランキングを表示\n' +
-                       '**機能:**\n' +
-                       '• 各キャンプのMythicアイテム価格比較\n' +
-                       '• Unidentified価格での並び替え\n' +
-                       '• 平均価格の自動計算',
+                name: '💰 ``/lr mythranking``',
+                value: 'Mythicアイテムの相場ランキング表示\n' +
+                       'Unidentified価格での比較・平均価格計算',
                 inline: false
             }
         ],
@@ -53,22 +43,17 @@ const HELP_PAGES = [
         description: 'レイド（Raid）に関する情報を取得します。',
         fields: [
             {
-                name: '⚡ `/raid aspectpool [rarity]`',
-                value: '**説明:** 今週の各レイドのアスペクトを表示\n' +
-                       '**オプション:**\n' +
-                       '• `rarity`: 表示するレアリティを選択\n' +
-                       '　- `mythic`: Mythicアスペクトのみ\n' +
-                       '　- `fabled`: Fabledアスペクトのみ\n' +
-                       '　- `legendary`: Legendaryアスペクトのみ\n' +
-                       '　- 指定なし: 全レアリティ表示',
+                name: '⚡ ``/raid aspectpool``',
+                value: '今週の各レイドのアスペクトを表示\n' +
+                       '**オプション:** ``rarity`` (mythic/fabled/legendary)',
                 inline: false
             },
             {
                 name: '🏛️ 対応レイド',
-                value: '• **TNA** - The Nameless Anomaly\n' +
-                       '• **TCC** - The Canyon Colossus\n' +
-                       '• **NOL** - Orphion\'s Nexus of Light\n' +
-                       '• **NOTG** - Nest of the Grootslangs',
+                value: '``TNA`` The Nameless Anomaly\n' +
+                       '``TCC`` The Canyon Colossus\n' +
+                       '``NOL`` Orphion\'s Nexus of Light\n' +
+                       '``NOTG`` Nest of the Grootslangs',
                 inline: false
             },
             {
@@ -85,23 +70,17 @@ const HELP_PAGES = [
         description: 'プレイヤーのWynncraft統計情報を取得します。',
         fields: [
             {
-                name: '📈 `/wynn stats <mcid>`',
-                value: '**説明:** 指定したプレイヤーの統計情報を表示\n' +
-                       '**必須パラメータ:**\n' +
-                       '• `mcid`: Minecraft ID（プレイヤー名）\n\n' +
-                       '**表示される情報:**\n' +
-                       '• 総プレイ時間・ランク情報\n' +
-                       '• 各クラスのレベルと経験値\n' +
-                       '• プログレスバー付きレベル表示\n' +
-                       '• ギルド情報（所属している場合）',
+                name: '📈 ``/wynn stats``',
+                value: '指定プレイヤーの統計情報を表示\n' +
+                       '**必須:** ``mcid`` (プレイヤー名)\n' +
+                       '総プレイ時間・各クラスレベル・ギルド情報',
                 inline: false
             },
             {
                 name: '📊 統計情報の詳細',
-                value: '• **レベル表示:** プログレスバーで進行状況を視覚化\n' +
-                       '• **プレイ時間:** 時間・分単位で詳細表示\n' +
-                       '• **クラス情報:** 全5クラスの詳細データ\n' +
-                       '• **リアルタイム:** Wynncraft公式APIから最新データ取得',
+                value: 'プログレスバー付きレベル表示\n' +
+                       '全5クラスの詳細データ\n' +
+                       'Wynncraft公式APIから最新データ取得',
                 inline: false
             }
         ],
@@ -112,33 +91,84 @@ const HELP_PAGES = [
         description: 'ギルド「Just Here After Work (SKJ)」の管理機能。',
         fields: [
             {
-                name: '📊 `/guild ranking`',
-                value: '**説明:** ギルドメンバーのランキングを表示\n' +
-                       '**機能:**\n' +
-                       '• メンバーの貢献度ランキング\n' +
-                       '• 週次ランキング履歴\n' +
-                       '• 自動データ収集・保存',
+                name: '📊 ``/guild ranking``',
+                value: 'ギルドメンバーの貢献度ランキング\n' +
+                       '週次履歴・自動データ収集',
                 inline: false
             },
             {
-                name: '🔄 `/guild setrank`',
-                value: '**説明:** ギルドランキングデータを手動更新\n' +
-                       '**権限:** 管理者権限が必要\n' +
-                       '**機能:**\n' +
-                       '• Wynncraft APIからデータ取得\n' +
-                       '• ランキングデータの強制更新\n' +
-                       '• データベースへの保存',
+                name: '🔄 ``/guild setrank``',
+                value: 'ギルドデータを手動更新（管理者権限必要）\n' +
+                       'APIからデータ取得・強制更新',
                 inline: false
             },
             {
                 name: '⚙️ 自動機能',
-                value: '• **定期更新:** 自動的にギルドデータを取得\n' +
-                       '• **データ保存:** ランキング履歴を永続保存\n' +
-                       '• **メンバー管理:** 脱退・参加の自動検出',
+                value: '定期的な自動データ更新\n' +
+                       'ランキング履歴の永続保存\n' +
+                       'メンバー変更の自動検出',
                 inline: false
             }
         ],
         color: 0xE74C3C
+    },
+    {
+        title: '🤖 /anni - AI予測Annihilationタイマー（管理者限定）',
+        description: 'Annihilationイベントの高精度AI予測システム。Wynnpool並みの精度を実現。',
+        fields: [
+            {
+                name: '🎯 ``/anni timer``',
+                value: 'AI予測による自動更新タイマー\n' +
+                       '10秒ごと更新・信頼度表示\n' +
+                       '🎯高精度 🤖中精度 ⚠️低精度',
+                inline: false
+            },
+            {
+                name: '📊 ``/anni predict``',
+                value: '次回Annihilationの詳細予測\n' +
+                       '予測時刻・信頼度・手法表示',
+                inline: false
+            },
+            {
+                name: '⚙️ ``/anni timer-manual``',
+                value: '従来の固定間隔タイマー\n' +
+                       '``datetime`` ``timezone`` 指定',
+                inline: false
+            }
+        ],
+        color: 0x00FF88
+    },
+    {
+        title: '🧠 AI予測システム - 詳細機能',
+        description: 'ARIMA時系列解析とハイブリッド予測により高精度を実現。',
+        fields: [
+            {
+                name: '📝 データ管理コマンド',
+                value: '``/anni record`` イベント発生記録\n' +
+                       '``/anni history`` 履歴表示\n' +
+                       '``/anni import`` データ取込\n' +
+                       '``/anni analyze`` 統計分析\n' +
+                       '``/anni compare`` 予測比較',
+                inline: false
+            },
+            {
+                name: '🔧 システム管理（管理者用）',
+                value: '``/anni reset`` キャッシュリセット\n' +
+                       '``/anni clear-history`` 履歴削除\n' +
+                       '``/anni debug`` デバッグ情報\n' +
+                       '``/anni alert`` 通知設定\n' +
+                       '``/anni mention`` ロール設定',
+                inline: false
+            },
+            {
+                name: '🎯 予測システムの特徴',
+                value: '統計予測・ARIMA機械学習モデル\n' +
+                       'ハイブリッド統合判定\n' +
+                       '自動学習による精度向上',
+                inline: false
+            }
+        ],
+        color: 0x9932CC
     }
 ];
 
@@ -162,6 +192,17 @@ module.exports = {
             time: 300000 // 5分間
         });
         
+        // 1分間の非活性でメッセージ削除用タイマー
+        let deleteTimer = setTimeout(async () => {
+            try {
+                await reply.delete();
+                console.log('[INFO] Help message auto-deleted due to inactivity');
+            } catch (error) {
+                // メッセージが既に削除されている場合は何もしない
+                console.log('[INFO] Help message was already deleted');
+            }
+        }, 60000); // 1分間
+        
         collector.on('collect', async (buttonInteraction) => {
             // 操作者チェック
             if (buttonInteraction.user.id !== interaction.user.id) {
@@ -171,6 +212,17 @@ module.exports = {
                 });
                 return;
             }
+            
+            // タイマーをリセット（ユーザーが操作したため）
+            clearTimeout(deleteTimer);
+            deleteTimer = setTimeout(async () => {
+                try {
+                    await reply.delete();
+                    console.log('[INFO] Help message auto-deleted due to inactivity');
+                } catch (error) {
+                    console.log('[INFO] Help message was already deleted');
+                }
+            }, 60000); // 1分間
             
             // ページ切り替え処理
             if (buttonInteraction.customId === 'help_prev') {
@@ -188,6 +240,9 @@ module.exports = {
         });
         
         collector.on('end', async () => {
+            // コレクター終了時にタイマーもクリア
+            clearTimeout(deleteTimer);
+            
             // タイムアウト時にボタンを無効化
             const { embed, row } = createHelpPage(currentPage, true);
             try {

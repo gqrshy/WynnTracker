@@ -1,6 +1,24 @@
 {
-  "startTime": "2025-07-12T11:13:00.000Z",
-  "setBy": "661187451913633844",
-  "setAt": "2025-07-09T15:36:53.583Z",
-  "serverId": "1238021708921966653"
+  "startTime": "2025-07-15T11:38:52.216Z",
+  "setBy": "auto_sync",
+  "setAt": "2025-07-12T14:06:06.754Z",
+  "confidence": 84,
+  "sources": [
+    "Local",
+    "ARIMA"
+  ],
+  "agreement": 80,
+  "method": "hybrid",
+  "predictions": [
+    {
+      "source": "Local",
+      "time": "2025-07-15T13:39:39.333Z",
+      "confidence": 81
+    },
+    {
+      "source": "ARIMA",
+      "time": "2025-07-15T09:55:53.096Z",
+      "confidence": 95
+    }
+  ]
 }
