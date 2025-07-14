@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 const config = require('../config');
+const rateLimiter = require('../utils/rateLimiter');
 
 // エメラルド通貨のフォーマット関数
 function formatEmeraldCurrency(emeralds) {
@@ -94,14 +95,37 @@ module.exports = {
 };
 
 async function handleLootpool(interaction) {
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'lr_lootpool');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは30秒に2回まで使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
         const page = interaction.options.getInteger('page') || 1;
         const selectedCamp = interaction.options.getString('camp');
         
-        // Wynnventory APIから過去のルートプール情報を取得（ページ指定）
-        const lootpoolData = await getLootpoolHistoryData(page);
+        // キャッシュチェック
+        const cacheKey = `page_${page}_camp_${selectedCamp || 'all'}`;
+        const cachedData = rateLimiter.getCache('lr_lootpool', cacheKey);
+        
+        let lootpoolData;
+        if (cachedData) {
+            console.log('[INFO] Using cached lootpool data');
+            lootpoolData = cachedData;
+        } else {
+            // Wynnventory APIから過去のルートプール情報を取得（ページ指定）
+            lootpoolData = await getLootpoolHistoryData(page);
+            if (lootpoolData) {
+                rateLimiter.setCache('lr_lootpool', cacheKey, lootpoolData);
+            }
+        }
         
         const embed = new EmbedBuilder()
             .setTitle('🎁 Loot Pool History')
@@ -165,6 +189,16 @@ async function handleLootpool(interaction) {
 }
 
 async function handleMythRanking(interaction) {
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'lr_mythranking');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは5分に1回しか使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
@@ -177,9 +211,17 @@ async function handleMythRanking(interaction) {
                 iconURL: 'https://cdn.wynncraft.com/nextgen/wynncraft_icon_32x32.png' 
             });
         
-        // 各キャンプのMythic情報と平均価格を取得
-        const campData = [];
-        const lootpoolData = await getLootpoolData();
+        // キャッシュチェック
+        const cacheKey = 'mythranking';
+        const cachedData = rateLimiter.getCache('lr_mythranking', cacheKey);
+        
+        let campData = [];
+        if (cachedData) {
+            console.log('[INFO] Using cached mythranking data');
+            campData = cachedData;
+        } else {
+            // 各キャンプのMythic情報と平均価格を取得
+            const lootpoolData = await getLootpoolData();
         
         if (!lootpoolData || lootpoolData.length === 0) {
             embed.setDescription(
@@ -209,6 +251,12 @@ async function handleMythRanking(interaction) {
                             mythics: mythics
                         });
                     }
+                }
+            }
+                
+                // キャッシュに保存
+                if (campData.length > 0) {
+                    rateLimiter.setCache('lr_mythranking', cacheKey, campData);
                 }
             }
             
@@ -389,7 +437,7 @@ function formatLootpoolItems(items) {
     return result.trim() || '*No items in pool*';
 }
 
-// キャンプのMythicアイテムと価格データを取得
+// キャンプのMythicアイテムと価格データを取得（並列処理で高速化）
 async function getCampMythicsWithPrices(campData) {
     try {
         const mythicGroups = campData.region_items.filter(group => 
@@ -398,30 +446,44 @@ async function getCampMythicsWithPrices(campData) {
         
         const mythics = [];
         
+        // 並列処理で価格取得を高速化
+        const pricePromises = [];
+        
         for (const group of mythicGroups) {
             for (const item of group.loot_items) {
                 if (item.rarity === 'Mythic') {
-                    try {
-                        const priceData = await getItemMarketPrice(item.name, item.shiny || false);
-                        mythics.push({
-                            name: item.name,
-                            shiny: item.shiny || false,
-                            shinyStat: item.shinyStat || null,
-                            price: priceData.averagePrice || 0
-                        });
-                        
-                        // レート制限対策
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                    } catch (priceError) {
-                        console.error(`[ERROR] ${item.name}の価格取得エラー:`, priceError);
-                        mythics.push({
-                            name: item.name,
-                            shiny: item.shiny || false,
-                            shinyStat: item.shinyStat || null,
-                            price: 0
-                        });
-                    }
+                    pricePromises.push(
+                        getItemMarketPrice(item.name, item.shiny || false)
+                            .then(priceData => ({
+                                name: item.name,
+                                shiny: item.shiny || false,
+                                shinyStat: item.shinyStat || null,
+                                price: priceData.averagePrice || 0
+                            }))
+                            .catch(error => {
+                                console.error(`[ERROR] ${item.name}の価格取得エラー:`, error);
+                                return {
+                                    name: item.name,
+                                    shiny: item.shiny || false,
+                                    shinyStat: item.shinyStat || null,
+                                    price: 0
+                                };
+                            })
+                    );
                 }
+            }
+        }
+        
+        // 並列で全ての価格を取得（バッチサイズを制限）
+        const batchSize = 5;
+        for (let i = 0; i < pricePromises.length; i += batchSize) {
+            const batch = pricePromises.slice(i, i + batchSize);
+            const results = await Promise.all(batch);
+            mythics.push(...results);
+            
+            // バッチ間で短い待機時間
+            if (i + batchSize < pricePromises.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
         

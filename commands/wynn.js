@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getPlayerStats } = require('../utils/wynncraft-api');
+const rateLimiter = require('../utils/rateLimiter');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -231,10 +232,33 @@ function calculateTotalXPFromLevel(level) {
 async function handleStats(interaction) {
     const mcid = interaction.options.getString('mcid');
     
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'wynn_stats');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは10秒に3回まで使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
-        const playerData = await getPlayerStats(mcid);
+        // キャッシュチェック
+        const cacheKey = mcid.toLowerCase();
+        const cachedData = rateLimiter.getCache('wynn_stats', cacheKey);
+        
+        let playerData;
+        if (cachedData) {
+            console.log(`[INFO] Using cached player data for ${mcid}`);
+            playerData = cachedData;
+        } else {
+            playerData = await getPlayerStats(mcid);
+            if (playerData) {
+                rateLimiter.setCache('wynn_stats', cacheKey, playerData);
+            }
+        }
         
         if (!playerData) {
             return await interaction.editReply('❌ プレイヤーが見つかりませんでした');

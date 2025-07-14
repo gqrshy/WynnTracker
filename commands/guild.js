@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 const cron = require('node-cron');
+const rateLimiter = require('../utils/rateLimiter');
 
 // データファイルのパス
 const GUILD_DATA_PATH = path.join(__dirname, '..', 'data', 'guild_rankings.json');
@@ -34,10 +35,12 @@ async function saveGuildData(data) {
 // Wynncraft APIからギルド情報を取得
 async function fetchGuildData(fetchFullMemberData = false) {
     try {
+        // バッチリクエストで高速化
         const response = await axios.get(`https://api.wynncraft.com/v3/guild/${encodeURIComponent(GUILD_NAME)}`, {
-            timeout: 10000,
+            timeout: 15000,
             headers: {
-                'User-Agent': 'WynnTracker-Bot/1.0'
+                'User-Agent': 'WynnTracker-Bot/1.0',
+                'Accept-Encoding': 'gzip' // 圧縮を有効化
             }
         });
         
@@ -227,6 +230,16 @@ async function handleRankSet(interaction) {
         return;
     }
     
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'guild_setrank');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは5分に1回しか使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
@@ -313,6 +326,16 @@ async function handleRankSet(interaction) {
 
 // /guild gxp ranking の処理
 async function handleGxpRanking(interaction) {
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'guild_ranking');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは1分に1回しか使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
@@ -323,9 +346,21 @@ async function handleGxpRanking(interaction) {
             return;
         }
         
+        // キャッシュチェック
+        const cacheKey = 'gxp_ranking';
+        const cachedData = rateLimiter.getCache('guild_ranking', cacheKey);
         
-        // 現在のギルドデータを取得（完全なメンバーデータを取得）
-        const guildData = await fetchGuildData(true);
+        let guildData;
+        if (cachedData) {
+            console.log('[INFO] Using cached guild data for ranking');
+            guildData = cachedData;
+        } else {
+            // 現在のギルドデータを取得（完全なメンバーデータを取得）
+            guildData = await fetchGuildData(true);
+            if (guildData) {
+                rateLimiter.setCache('guild_ranking', cacheKey, guildData);
+            }
+        }
         const rankings = [];
         
         // 各メンバーの差分を計算

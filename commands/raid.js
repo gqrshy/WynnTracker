@@ -3,6 +3,7 @@ const axios = require('axios');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
+const rateLimiter = require('../utils/rateLimiter');
 
 // JSONデータを読み込み
 const aspectsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/aspects.json'), 'utf8'));
@@ -18,6 +19,7 @@ const RAID_NAMES = {
 
 // レイドの表示順序
 const RAID_DISPLAY_ORDER = ['TNA', 'TCC', 'NOL', 'NOTG'];
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -38,6 +40,17 @@ module.exports = {
                             { name: 'Legendary', value: 'legendary' }
                         )
                 )
+                .addStringOption(option =>
+                    option
+                        .setName('language')
+                        .setDescription('説明文の言語を選択')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: 'Japanese only (日本語のみ)', value: 'ja' },
+                            { name: 'English only (英語のみ)', value: 'en' },
+                            { name: 'Both languages (両方)', value: 'both' }
+                        )
+                )
         ),
     
     async execute(interaction) {
@@ -50,13 +63,37 @@ module.exports = {
 };
 
 async function handleAspectPool(interaction) {
+    // レート制限チェック
+    const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'raid_aspectpool');
+    if (!rateLimitCheck.allowed) {
+        await interaction.reply({
+            content: `⏳ このコマンドは1分に1回しか使用できません。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
+            ephemeral: true
+        });
+        return;
+    }
+    
     await interaction.deferReply();
     
     try {
         const selectedRarity = interaction.options.getString('rarity');
+        const selectedLanguage = interaction.options.getString('language') || 'en';
         
-        // Wynnventory APIからレイド報酬情報を取得
-        const raidData = await getRaidPoolData();
+        // キャッシュチェック
+        const cacheKey = `${selectedRarity || 'all'}_${selectedLanguage}`;
+        const cachedData = rateLimiter.getCache('raid_aspectpool', cacheKey);
+        
+        let raidData;
+        if (cachedData) {
+            console.log('[INFO] Using cached raid data for aspectpool');
+            raidData = cachedData;
+        } else {
+            // Wynnventory APIからレイド報酬情報を取得
+            raidData = await getRaidPoolData();
+            if (raidData) {
+                rateLimiter.setCache('raid_aspectpool', cacheKey, raidData);
+            }
+        }
         
         const embed = new EmbedBuilder()
             .setTitle('🏛️ Weekly Aspect Rotation')
@@ -95,9 +132,14 @@ async function handleAspectPool(interaction) {
                 `*${selectedRarity.charAt(0).toUpperCase() + selectedRarity.slice(1)} アスペクトのみ表示*` : 
                 '*全レアリティのアスペクトを表示*';
             
+            const languageText = selectedLanguage === 'ja' ? '*日本語のみ表示*' :
+                               selectedLanguage === 'en' ? '*英語のみ表示（デフォルト）*' :
+                               '*日本語・英語両方表示*';
+            
             embed.setDescription(
                 `${weekInfo}\n` +
-                `${rarityText}\n\n` +
+                `${rarityText}\n` +
+                `${languageText}\n\n` +
                 `*アスペクトは毎週木曜日に更新されます*`
             );
             
@@ -123,45 +165,38 @@ async function handleAspectPool(interaction) {
                     
                     if (selectedRarity) {
                         // 特定のレアリティが選択されている場合
-                        const aspects = extractAspectsFromRaid(itemsToProcess, selectedRarity);
+                        const aspects = extractAspectsFromRaid(itemsToProcess, selectedRarity, selectedLanguage);
                         
                         if (aspects.length > 0) {
-                            let aspectList = '';
-                            // レアリティ絵文字を決定
-                            const rarityEmoji = selectedRarity === 'mythic' ? '<:mythic:1392820964219289700>' :
-                                              selectedRarity === 'fabled' ? '<:fabled:1392871012470886511>' :
-                                              selectedRarity === 'legendary' ? '<:legendary:1392870999565013118>' : '';
-                            
                             const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
-                            aspectList += `\u200b\n　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
+                            
+                            // 各レイドごとに個別のフィールドを作成（区切り線スタイル）
+                            let aspectList = `　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
                             for (const aspectInfo of aspects) {
                                 aspectList += `　　• **${aspectInfo.name}**\n`;
-                                if (aspectInfo.description) {
-                                    aspectList += `　　　\`${aspectInfo.description}\`\n`;
-                                }
+                                aspectList += aspectInfo.description;
                             }
                             
+                            // シンプルに1つのフィールドとして追加
                             embed.addFields({
                                 name: '\u200b',
-                                value: aspectList,
+                                value: aspectList.trim(),
                                 inline: false
                             });
                         }
                     } else {
                         // 全レアリティ表示の場合
-                        const aspectGroups = extractAspectsByRarity(itemsToProcess);
+                        const aspectGroups = extractAspectsByRarity(itemsToProcess, selectedLanguage);
                         let hasAnyAspects = false;
                         const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
-                        let aspectList = `\u200b\n　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
+                        let aspectList = `　**━━━ ${raidEmoji} ${raidName} ━━━**\n`;
                         
                         // Mythicアイテムを最初に表示
                         if (aspectGroups['Mythic'].length > 0) {
                             aspectList += '　　**<:mythic:1392820964219289700> Mythic Aspects**\n';
                             for (const aspectInfo of aspectGroups['Mythic']) {
                                 aspectList += `　　　• **${aspectInfo.name}**\n`;
-                                if (aspectInfo.description) {
-                                    aspectList += `　　　　\`${aspectInfo.description}\`\n`;
-                                }
+                                aspectList += aspectInfo.description.replace(/　　　/g, '　　　　');
                             }
                             aspectList += '\n';
                             hasAnyAspects = true;
@@ -172,9 +207,7 @@ async function handleAspectPool(interaction) {
                             aspectList += '　　**<:fabled:1392871012470886511> Fabled Aspects**\n';
                             for (const aspectInfo of aspectGroups['Fabled']) {
                                 aspectList += `　　　• **${aspectInfo.name}**\n`;
-                                if (aspectInfo.description) {
-                                    aspectList += `　　　　\`${aspectInfo.description}\`\n`;
-                                }
+                                aspectList += aspectInfo.description.replace(/　　　/g, '　　　　');
                             }
                             aspectList += '\n';
                             hasAnyAspects = true;
@@ -185,24 +218,22 @@ async function handleAspectPool(interaction) {
                             aspectList += '　　**<:legendary:1392870999565013118> Legendary Aspects**\n';
                             for (const aspectInfo of aspectGroups['Legendary']) {
                                 aspectList += `　　　• **${aspectInfo.name}**\n`;
-                                if (aspectInfo.description) {
-                                    aspectList += `　　　　\`${aspectInfo.description}\`\n`;
-                                }
+                                aspectList += aspectInfo.description.replace(/　　　/g, '　　　　');
                             }
                             hasAnyAspects = true;
                         }
                         
                         if (hasAnyAspects) {
+                            // シンプルに1つのフィールドとして追加
                             embed.addFields({
                                 name: '\u200b',
                                 value: aspectList.trim(),
                                 inline: false
                             });
                         } else {
-                            const raidEmoji = RAID_EMOJIS[raidId] || '🏛️';
                             embed.addFields({
-                                name: `${raidEmoji} ${raidName}`,
-                                value: '　*No aspects in current pool*',
+                                name: '\u200b',
+                                value: `　**━━━ ${raidEmoji} ${raidName} ━━━**\n　*No aspects in current pool*`,
                                 inline: false
                             });
                         }
@@ -224,7 +255,7 @@ async function handleAspectPool(interaction) {
             // Gambit情報を追加
             const gambits = await getCurrentGambits();
             if (gambits && gambits.length > 0) {
-                let gambitList = `\u200b\n　**━━━ 🎲 Current Week Gambits ━━━**\n`;
+                let gambitList = `　**━━━ 🎲 Current Week Gambits ━━━**\n`;
                 
                 for (let i = 0; i < gambits.length; i++) {
                     const gambit = gambits[i];
@@ -238,14 +269,15 @@ async function handleAspectPool(interaction) {
                         );
                         const summary = cleanedLines.join(' ').replace(/\s+/g, ' ');
                         
-                        // 日本語訳があれば使用、なければ英語のまま
-                        const translatedSummary = translateGambitDescription(summary);
+                        // 言語設定に応じて説明文を整形
+                        const formattedSummary = formatGambitDescription(summary, selectedLanguage);
                         
                         gambitList += `　　• **${shortName}**\n`;
-                        gambitList += `　　　\`${translatedSummary}\`\n`;
+                        gambitList += `　　　${formattedSummary}\n`;
                     }
                 }
                 
+                // シンプルに1つのフィールドとして追加
                 embed.addFields({
                     name: '\u200b',
                     value: gambitList.trim(),
@@ -258,10 +290,15 @@ async function handleAspectPool(interaction) {
         
     } catch (error) {
         console.error('[ERROR] AspectPool取得エラー:', error);
-        await interaction.editReply(
-            '❌ アスペクトプール情報の取得中にエラーが発生しました。\n' +
-            'Wynnventory (wynnventory.com) で最新情報を確認してください。'
-        );
+        try {
+            await interaction.editReply(
+                '❌ アスペクトプール情報の取得中にエラーが発生しました。\n' +
+                'Wynnventory (wynnventory.com) で最新情報を確認してください。'
+            );
+        } catch (replyError) {
+            console.error('[ERROR] インタラクションへの返信に失敗しました:', replyError);
+            // インタラクションが無効な場合は何もしない
+        }
     }
 }
 
@@ -344,6 +381,12 @@ const RAID_EMOJIS = {
 
 // アスペクト名からクラスを判定
 function getClassFromAspectName(aspectName) {
+    // 直接マッピングをチェック
+    if (aspectsData.aspect_class_mapping && aspectsData.aspect_class_mapping[aspectName]) {
+        return aspectsData.aspect_class_mapping[aspectName];
+    }
+    
+    // キーワードベースの判定（Embodiment系）
     for (const [className, keywords] of Object.entries(aspectsData.class_keywords)) {
         for (const keyword of keywords) {
             if (aspectName.includes(keyword)) {
@@ -354,13 +397,118 @@ function getClassFromAspectName(aspectName) {
     return null;
 }
 
-// アスペクトの説明を取得
+// アスペクトの説明を取得（日本語と英語両方）
 function getAspectDescription(aspectName) {
-    return aspectsData.aspects[aspectName] || null;
+    const aspect = aspectsData.aspects[aspectName];
+    if (!aspect) return null;
+    
+    // 新しい形式（オブジェクト）の場合
+    if (typeof aspect === 'object' && aspect.ja && aspect.en) {
+        return {
+            ja: aspect.ja,
+            en: aspect.en
+        };
+    }
+    
+    // 旧形式（文字列）の場合は日本語のみ
+    if (typeof aspect === 'string') {
+        return {
+            ja: aspect,
+            en: null
+        };
+    }
+    
+    return null;
+}
+
+// テキストを指定された幅で改行し、各行をインラインコードブロックで囲む
+function wrapText(text, maxWidth = 50) {
+    if (!text || text.length <= maxWidth) return `\`${text}\``;
+    
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+        if (currentLine.length === 0) {
+            currentLine = word;
+        } else if (currentLine.length + word.length + 1 <= maxWidth) {
+            currentLine += ' ' + word;
+        } else {
+            lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    
+    if (currentLine.length > 0) {
+        lines.push(currentLine);
+    }
+    
+    // 各行を個別のインラインコードブロックで囲む
+    return lines.map(line => `\`${line}\``).join('\n　　　');
+}
+
+// アスペクト名を短縮
+function shortenAspectName(aspectName) {
+    return aspectName
+        .replace('Aspect of ', '')
+        .replace('Aspect of the ', '');
+}
+
+// 選択された言語に応じて説明文を整形
+function formatAspectDescription(description, language) {
+    if (!description) return '';
+    
+    let result = '';
+    
+    switch (language) {
+        case 'ja':
+            if (description.ja) {
+                const wrappedText = wrapText(description.ja);
+                result = `　　　${wrappedText}\n`;
+            }
+            break;
+        case 'en':
+            if (description.en) {
+                const wrappedText = wrapText(description.en);
+                result = `　　　${wrappedText}\n`;
+            } else if (description.ja) {
+                // 英語がない場合は日本語をフォールバック
+                const wrappedText = wrapText(description.ja);
+                result = `　　　${wrappedText}\n`;
+            }
+            break;
+        case 'both':
+            if (description.ja) {
+                const wrappedTextJa = wrapText(description.ja);
+                result += `　　　${wrappedTextJa}\n`;
+                if (description.en) {
+                    const wrappedTextEn = wrapText(description.en);
+                    result += `　　　${wrappedTextEn}\n`;
+                }
+            } else if (description.en) {
+                const wrappedText = wrapText(description.en);
+                result += `　　　${wrappedText}\n`;
+            }
+            break;
+        default:
+            // デフォルトは英語のみ
+            if (description.en) {
+                const wrappedText = wrapText(description.en);
+                result = `　　　${wrappedText}\n`;
+            } else if (description.ja) {
+                // 英語がない場合は日本語をフォールバック
+                const wrappedText = wrapText(description.ja);
+                result = `　　　${wrappedText}\n`;
+            }
+            break;
+    }
+    
+    return result;
 }
 
 // レイドアイテムからアスペクトを抽出
-function extractAspectsFromRaid(items, rarityFilter = null) {
+function extractAspectsFromRaid(items, rarityFilter = null, language = 'both') {
     if (!items || !Array.isArray(items)) {
         return [];
     }
@@ -378,9 +526,11 @@ function extractAspectsFromRaid(items, rarityFilter = null) {
                     const classType = getClassFromAspectName(item.name);
                     const emoji = classType ? CLASS_EMOJIS[classType] : '';
                     const description = getAspectDescription(item.name);
+                    const formattedDescription = formatAspectDescription(description, language);
+                    const shortName = shortenAspectName(item.name);
                     aspects.push({
-                        name: `${emoji} ${item.name}`,
-                        description: description
+                        name: `${emoji} ${shortName}`,
+                        description: formattedDescription
                     });
                 }
             } else {
@@ -388,9 +538,11 @@ function extractAspectsFromRaid(items, rarityFilter = null) {
                 const classType = getClassFromAspectName(item.name);
                 const emoji = classType ? CLASS_EMOJIS[classType] : '';
                 const description = getAspectDescription(item.name);
+                const formattedDescription = formatAspectDescription(description, language);
+                const shortName = shortenAspectName(item.name);
                 aspects.push({
-                    name: `${emoji} ${item.name}`,
-                    description: description
+                    name: `${emoji} ${shortName}`,
+                    description: formattedDescription
                 });
             }
         }
@@ -400,7 +552,7 @@ function extractAspectsFromRaid(items, rarityFilter = null) {
 }
 
 // レアリティ別にアスペクトをグループ化
-function extractAspectsByRarity(items) {
+function extractAspectsByRarity(items, language = 'both') {
     if (!items || !Array.isArray(items)) {
         return {};
     }
@@ -431,9 +583,11 @@ function extractAspectsByRarity(items) {
                 const classType = getClassFromAspectName(item.name);
                 const emoji = classType ? CLASS_EMOJIS[classType] : '';
                 const description = getAspectDescription(item.name);
+                const formattedDescription = formatAspectDescription(description, language);
+                const shortName = shortenAspectName(item.name);
                 aspectGroups[normalizedRarity].push({
-                    name: `${emoji} ${item.name}`,
-                    description: description
+                    name: `${emoji} ${shortName}`,
+                    description: formattedDescription
                 });
             }
         }
@@ -442,14 +596,24 @@ function extractAspectsByRarity(items) {
     return aspectGroups;
 }
 
-// Gambit説明の翻訳処理（JSONデータを使用）
-function translateGambitDescription(description) {
+// Gambit説明の処理（言語オプションに対応）
+function formatGambitDescription(description, language = 'en') {
     // 完全一致の翻訳があるか確認
     if (gambitsData.gambits[description]) {
-        return gambitsData.gambits[description];
+        const gambitData = gambitsData.gambits[description];
+        
+        // 新しい形式（オブジェクト）の場合
+        if (typeof gambitData === 'object' && gambitData.ja && gambitData.en) {
+            return formatGambitText(gambitData, language);
+        }
+        
+        // 旧形式（文字列）の場合は日本語として扱う
+        if (typeof gambitData === 'string') {
+            return formatGambitText({ ja: gambitData, en: description }, language);
+        }
     }
     
-    // パターンマッチングで翻訳
+    // パターンマッチングで翻訳（旧システム用）
     for (const [pattern, translation] of Object.entries(gambitsData.patterns)) {
         // {X}, {Y}, {Z}を数値の正規表現に置き換え
         const regexPattern = pattern
@@ -466,12 +630,67 @@ function translateGambitDescription(description) {
             for (let i = 1; i < match.length; i++) {
                 translatedText = translatedText.replace(`{${String.fromCharCode(87 + i)}}`, match[i]);
             }
-            return translatedText;
+            return formatGambitText({ ja: translatedText, en: description }, language);
         }
     }
     
-    // 翻訳が見つからない場合は英語のまま返す
-    return description;
+    // 翻訳が見つからない場合は元の説明文を返す
+    return formatGambitText({ ja: description, en: description }, language);
 }
+
+// Gambitテキストを言語設定に応じて整形
+function formatGambitText(gambitData, language) {
+    const wrappedTextJa = wrapText(gambitData.ja);
+    const wrappedTextEn = wrapText(gambitData.en);
+    
+    switch (language) {
+        case 'ja':
+            return wrappedTextJa;
+        case 'en':
+            return wrappedTextEn;
+        case 'both':
+            return `${wrappedTextJa}\n　　　${wrappedTextEn}`;
+        default:
+            return wrappedTextEn;
+    }
+}
+
+// テキストを1024文字制限内で複数のフィールドに分割
+function splitTextIntoFields(text, maxLength = 1024) {
+    if (text.length <= maxLength) {
+        return [text];
+    }
+    
+    const lines = text.split('\n');
+    const fields = [];
+    let currentField = '';
+    
+    for (const line of lines) {
+        // 次の行を追加した場合の長さをチェック
+        const testLength = currentField.length + (currentField ? 1 : 0) + line.length;
+        
+        if (testLength <= maxLength) {
+            if (currentField) {
+                currentField += '\n' + line;
+            } else {
+                currentField = line;
+            }
+        } else {
+            // 現在のフィールドを保存して新しいフィールドを開始
+            if (currentField) {
+                fields.push(currentField);
+            }
+            currentField = line;
+        }
+    }
+    
+    // 最後のフィールドを追加
+    if (currentField) {
+        fields.push(currentField);
+    }
+    
+    return fields;
+}
+
 
 

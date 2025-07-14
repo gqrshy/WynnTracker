@@ -1,7 +1,116 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 
-// ヘルプページのデータ
-const HELP_PAGES = [
+// 一般ユーザー用ヘルプページ
+const USER_HELP_PAGES = [
+    {
+        title: '📋 コマンド一覧 - 基本情報',
+        description: '**WynnTrackerボット**へようこそ！\n\nこのボットはWynncraftの様々な情報を提供します。\n下のボタンで各ページを切り替えできます。',
+        fields: [
+            {
+                name: '📖 利用可能なコマンド',
+                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/help`` - このヘルプ画面',
+                inline: false
+            },
+            {
+                name: '🔄 ページ切り替え',
+                value: '⬅️ **前のページ** | ➡️ **次のページ**',
+                inline: false
+            }
+        ],
+        color: 0x00AE86
+    },
+    {
+        title: '🏃 /lr コマンド - Lootrun関連',
+        description: 'ルートラン（Lootrun）に関する情報を取得します。',
+        fields: [
+            {
+                name: '📊 ``/lr lootpool``',
+                value: '各キャンプのルートプールを表示\n' +
+                       '**オプション:** ``page`` (1-10) | ``camp`` (キャンプ選択)',
+                inline: false
+            },
+            {
+                name: '💰 ``/lr mythranking``',
+                value: 'Mythicアイテムの相場ランキング表示\n' +
+                       'Unidentified価格での比較・平均価格計算',
+                inline: false
+            }
+        ],
+        color: 0x00AE86
+    },
+    {
+        title: '🏛️ /raid コマンド - レイド関連',
+        description: 'レイド（Raid）に関する情報を取得します。',
+        fields: [
+            {
+                name: '⚡ ``/raid aspectpool``',
+                value: '今週の各レイドのアスペクトを表示\n' +
+                       '**オプション:** ``rarity`` (mythic/fabled/legendary)\n' +
+                       '**オプション:** ``language`` (日本語/英語/両方)',
+                inline: false
+            },
+            {
+                name: '🏛️ 対応レイド',
+                value: '``TNA`` The Nameless Anomaly\n' +
+                       '``TCC`` The Canyon Colossus\n' +
+                       '``NOL`` Orphion\'s Nexus of Light\n' +
+                       '``NOTG`` Nest of the Grootslangs',
+                inline: false
+            },
+            {
+                name: '🎲 Gambit情報',
+                value: 'アスペクト情報と合わせて今週のGambitも表示されます。\n' +
+                       '各Gambitの効果は言語設定に応じて表示されます。',
+                inline: false
+            }
+        ],
+        color: 0x9D4EDD
+    },
+    {
+        title: '👤 /wynn コマンド - プレイヤー統計',
+        description: 'プレイヤーのWynncraft統計情報を取得します。',
+        fields: [
+            {
+                name: '📈 ``/wynn stats``',
+                value: '指定プレイヤーの統計情報を表示\n' +
+                       '**必須:** ``mcid`` (プレイヤー名)\n' +
+                       '総プレイ時間・各クラスレベル・ギルド情報',
+                inline: false
+            },
+            {
+                name: '📊 統計情報の詳細',
+                value: 'プログレスバー付きレベル表示\n' +
+                       '全5クラスの詳細データ\n' +
+                       'Wynncraft公式APIから最新データ取得',
+                inline: false
+            }
+        ],
+        color: 0x3498DB
+    },
+    {
+        title: '🏰 /guild コマンド - ギルド関連',
+        description: 'ギルド「Just Here After Work (SKJ)」の管理機能。',
+        fields: [
+            {
+                name: '📊 ``/guild ranking``',
+                value: 'ギルドメンバーの貢献度ランキング\n' +
+                       '週次履歴・自動データ収集',
+                inline: false
+            },
+            {
+                name: '⚙️ 自動機能',
+                value: '定期的な自動データ更新\n' +
+                       'ランキング履歴の永続保存\n' +
+                       'メンバー変更の自動検出',
+                inline: false
+            }
+        ],
+        color: 0xE74C3C
+    }
+];
+
+// 管理者用ヘルプページ（全ページ）
+const ADMIN_HELP_PAGES = [
     {
         title: '📋 コマンド一覧 - 基本情報',
         description: '**WynnTrackerボット**へようこそ！\n\nこのボットはWynncraftの様々な情報を提供します。\n下のボタンで各ページを切り替えできます。',
@@ -180,8 +289,12 @@ module.exports = {
     async execute(interaction) {
         let currentPage = 0;
         
+        // 管理者権限の確認
+        const isAdmin = interaction.member?.permissions?.has('Administrator') || false;
+        const HELP_PAGES = isAdmin ? ADMIN_HELP_PAGES : USER_HELP_PAGES;
+        
         // 初期ページの表示
-        const { embed, row } = createHelpPage(currentPage);
+        const { embed, row } = createHelpPage(currentPage, HELP_PAGES);
         const reply = await interaction.reply({
             embeds: [embed],
             components: [row]
@@ -232,7 +345,7 @@ module.exports = {
             }
             
             // ページ更新
-            const { embed: newEmbed, row: newRow } = createHelpPage(currentPage);
+            const { embed: newEmbed, row: newRow } = createHelpPage(currentPage, HELP_PAGES);
             await buttonInteraction.update({
                 embeds: [newEmbed],
                 components: [newRow]
@@ -244,7 +357,7 @@ module.exports = {
             clearTimeout(deleteTimer);
             
             // タイムアウト時にボタンを無効化
-            const { embed, row } = createHelpPage(currentPage, true);
+            const { embed, row } = createHelpPage(currentPage, HELP_PAGES, true);
             try {
                 await reply.edit({
                     embeds: [embed],
@@ -259,8 +372,8 @@ module.exports = {
 };
 
 // ヘルプページを作成する関数
-function createHelpPage(pageIndex, disabled = false) {
-    const page = HELP_PAGES[pageIndex];
+function createHelpPage(pageIndex, helpPages, disabled = false) {
+    const page = helpPages[pageIndex];
     
     const embed = new EmbedBuilder()
         .setTitle(page.title)
@@ -268,7 +381,7 @@ function createHelpPage(pageIndex, disabled = false) {
         .setColor(page.color)
         .setTimestamp()
         .setFooter({
-            text: `ページ ${pageIndex + 1}/${HELP_PAGES.length} | WynnTracker Help`,
+            text: `ページ ${pageIndex + 1}/${helpPages.length} | WynnTracker Help`,
             iconURL: 'https://cdn.wynncraft.com/nextgen/wynncraft_icon_32x32.png'
         });
     
@@ -291,7 +404,7 @@ function createHelpPage(pageIndex, disabled = false) {
                 .setLabel('次のページ')
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('➡️')
-                .setDisabled(disabled || pageIndex === HELP_PAGES.length - 1)
+                .setDisabled(disabled || pageIndex === helpPages.length - 1)
         );
     
     return { embed, row };

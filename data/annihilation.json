@@ -1,19 +1,19 @@
 {
-  "startTime": "2025-07-15T11:38:52.216Z",
+  "startTime": "2025-07-15T11:05:04.332Z",
   "setBy": "auto_sync",
-  "setAt": "2025-07-12T14:06:06.754Z",
-  "confidence": 84,
+  "setAt": "2025-07-14T15:48:08.552Z",
+  "confidence": 89,
   "sources": [
     "Local",
     "ARIMA"
   ],
-  "agreement": 80,
+  "agreement": 87,
   "method": "hybrid",
   "predictions": [
     {
       "source": "Local",
-      "time": "2025-07-15T13:39:39.333Z",
-      "confidence": 81
+      "time": "2025-07-15T12:21:30.000Z",
+      "confidence": 86
     },
     {
       "source": "ARIMA",
