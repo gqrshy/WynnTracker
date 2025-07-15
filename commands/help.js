@@ -8,7 +8,7 @@ const USER_HELP_PAGES = [
         fields: [
             {
                 name: '📖 利用可能なコマンド',
-                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/help`` - このヘルプ画面',
+                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/tm`` - Trade Market検索\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/help`` - このヘルプ画面',
                 inline: false
             },
             {
@@ -46,7 +46,7 @@ const USER_HELP_PAGES = [
                 name: '⚡ ``/raid aspectpool``',
                 value: '今週の各レイドのアスペクトを表示\n' +
                        '**オプション:** ``rarity`` (mythic/fabled/legendary)\n' +
-                       '**オプション:** ``language`` (日本語/英語/両方)',
+                       '**オプション:** ``language`` (日本語/英語)',
                 inline: false
             },
             {
@@ -88,6 +88,34 @@ const USER_HELP_PAGES = [
         color: 0x3498DB
     },
     {
+        title: '💰 /tm コマンド - Trade Market',
+        description: 'Trade Market（取引市場）の検索と価格情報を取得します。',
+        fields: [
+            {
+                name: '🔍 ``/tm search``',
+                value: 'アイテムの最新出品情報を検索\n' +
+                       '**必須:** ``item`` (アイテム名)\n' +
+                       '**オプション:** ``unidentified`` (Unidのみ表示)',
+                inline: false
+            },
+            {
+                name: '📊 表示される情報',
+                value: '• 最新5件の出品情報\n' +
+                       '• 過去7日間の平均価格\n' +
+                       '• Identified/Unidentified別の価格\n' +
+                       '• 出品時刻と数量',
+                inline: false
+            },
+            {
+                name: '⏱️ 使用制限',
+                value: '30秒に1回まで使用可能\n' +
+                       'API負荷軽減のための制限',
+                inline: false
+            }
+        ],
+        color: 0xFFD700
+    },
+    {
         title: '🏰 /guild コマンド - ギルド関連',
         description: 'ギルド「Just Here After Work (SKJ)」の管理機能。',
         fields: [
@@ -117,7 +145,7 @@ const ADMIN_HELP_PAGES = [
         fields: [
             {
                 name: '📖 利用可能なコマンド',
-                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/anni`` - AI予測Annihilationタイマー（管理者限定）\n• ``/help`` - このヘルプ画面',
+                value: '• ``/lr`` - ルートラン関連コマンド\n• ``/raid`` - レイド関連コマンド\n• ``/tm`` - Trade Market検索\n• ``/wynn`` - プレイヤー統計情報\n• ``/guild`` - ギルド関連コマンド\n• ``/anni`` - AI予測Annihilationタイマー（管理者限定）\n• ``/help`` - このヘルプ画面',
                 inline: false
             },
             {
@@ -229,7 +257,8 @@ const ADMIN_HELP_PAGES = [
                 name: '🎯 ``/anni timer``',
                 value: 'AI予測による自動更新タイマー\n' +
                        '10秒ごと更新・信頼度表示\n' +
-                       '🎯高精度 🤖中精度 ⚠️低精度',
+                       '🎯高精度 🤖中精度 ⚠️低精度\n' +
+                       '**オプション:** ``timezone`` (jst/utc/both)',
                 inline: false
             },
             {

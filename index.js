@@ -4,6 +4,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const config = require('./config'); // .json を削除
 const cron = require('node-cron');
 const { AutoSyncSystem } = require('./utils/autoSyncSystem');
+const dataCache = require('./utils/dataCache');
 
 // Clientインスタンスの作成
 const client = new Client({ 
@@ -36,6 +37,9 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
     console.log(`[SUCCESS] ${client.user.tag} としてログインしました！`);
     client.user.setActivity('Wynncraft', { type: 'PLAYING' });
+    
+    // 静的データをプリロード
+    dataCache.preloadStaticData();
     
     // スラッシュコマンドを自動更新
     try {
@@ -335,12 +339,28 @@ async function updateSmartTimers(client) {
                 confidenceText = '**推定値**';
             }
             
+            // タイムゾーン設定を取得
+            const timezone = timerData.timezone || 'jst';
+            const targetDate = new Date(timerData.targetTime);
+            
+            // タイムゾーンに基づいて時刻表示を生成
+            let timeDisplay = '';
+            if (timezone === 'jst' || timezone === 'both') {
+                const jstTime = targetDate.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                timeDisplay += `🗾 **JST (日本標準時):** ${jstTime}\n`;
+            }
+            if (timezone === 'utc' || timezone === 'both') {
+                const utcTime = targetDate.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+                timeDisplay += `🌐 **UTC (協定世界時):** ${utcTime}\n`;
+            }
+            
             const { EmbedBuilder } = require('discord.js');
             const embed = new EmbedBuilder()
                 .setTitle(`${icon} Next Annihilation Event (AI Powered)`)
                 .setDescription(`⏰ **Time Remaining**\n` +
                               `\`\`\`${days}d ${hours}h ${minutes}m ${seconds}s\`\`\`\n` +
                               `📅 **Start Time**\n` +
+                              `${timeDisplay}` +
                               `<t:${Math.floor(timerData.targetTime / 1000)}:F>\n` +
                               `<t:${Math.floor(timerData.targetTime / 1000)}:R>\n\n` +
                               `🎯 **Prediction Info**\n` +

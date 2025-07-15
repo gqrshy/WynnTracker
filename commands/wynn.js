@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getPlayerStats } = require('../utils/wynncraft-api');
 const rateLimiter = require('../utils/rateLimiter');
+const ErrorHandler = require('../utils/errorHandler');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -235,10 +236,8 @@ async function handleStats(interaction) {
     // レート制限チェック
     const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'wynn_stats');
     if (!rateLimitCheck.allowed) {
-        await interaction.reply({
-            content: `⏳ このコマンドは10秒に3回まで使用できます。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
-            ephemeral: true
-        });
+        const errorResponse = ErrorHandler.handleRateLimitError(rateLimitCheck.waitTime, 'wynn stats');
+        await interaction.reply(errorResponse);
         return;
     }
     
@@ -444,15 +443,6 @@ async function handleStats(interaction) {
         await interaction.editReply({ embeds: [embed] });
         
     } catch (error) {
-        console.error('[ERROR] プレイヤー統計取得エラー:', error);
-        
-        let errorMessage = '❌ エラーが発生しました: ';
-        if (error.response && error.response.status === 404) {
-            errorMessage += `プレイヤー "${mcid}" が見つかりません。`;
-        } else {
-            errorMessage += '不明なエラーが発生しました。';
-        }
-        
-        await interaction.editReply({ content: errorMessage });
+        await ErrorHandler.handleCommandError(error, 'wynn stats', interaction);
     }
 }

@@ -283,10 +283,10 @@ async function handleRankSet(interaction) {
         currentData.members = newMemberData;
         await saveGuildData(currentData);
         
-        // 上位5名のcontributed情報を表示用に準備
+        // 上位10名のcontributed情報を表示用に準備
         const topContributors = Object.values(newMemberData)
             .sort((a, b) => b.contributed - a.contributed)
-            .slice(0, 5);
+            .slice(0, 10);
         
         let memberList = '\u200b\n　**━━━ 📊 記録されたメンバー ━━━**\n';
         topContributors.forEach((member, index) => {
@@ -297,8 +297,8 @@ async function handleRankSet(interaction) {
             if (index < topContributors.length - 1) memberList += '\n';
         });
         
-        if (Object.keys(newMemberData).length > 5) {
-            memberList += `\n　　...他${Object.keys(newMemberData).length - 5}名`;
+        if (Object.keys(newMemberData).length > 10) {
+            memberList += `\n　　...他${Object.keys(newMemberData).length - 10}名`;
         }
         
         const embed = new EmbedBuilder()
@@ -361,25 +361,41 @@ async function handleGxpRanking(interaction) {
                 rateLimiter.setCache('guild_ranking', cacheKey, guildData);
             }
         }
+        
+        if (!guildData || !guildData.members) {
+            await interaction.editReply('❌ ギルドデータの取得に失敗しました。');
+            return;
+        }
+        
         const rankings = [];
         
         // 各メンバーの差分を計算
         for (const [uuid, currentMember] of Object.entries(guildData.members)) {
             const savedMember = Object.values(currentData.members).find(m => m.uuid === uuid);
             
+            let gxpGained = 0;
+            let username = 'Unknown';
+            const currentContributed = currentMember.contributed || 0;
+            
             if (savedMember) {
-                const currentContributed = currentMember.contributed || 0;
+                // 既存メンバーの場合は差分を計算
                 const savedContributed = savedMember.contributed || 0;
-                const gxpGained = currentContributed - savedContributed;
-                
-                // 0以上の差分があれば追加
-                if (gxpGained >= 0) {
-                    rankings.push({
-                        username: currentMember.username || savedMember.username || 'Unknown',
-                        gxpGained: gxpGained,
-                        currentTotal: currentContributed
-                    });
-                }
+                gxpGained = currentContributed - savedContributed;
+                username = currentMember.username || savedMember.username || 'Unknown';
+            } else {
+                // 新しいメンバーの場合は全ての貢献度が今週の獲得量
+                gxpGained = currentContributed;
+                username = currentMember.username || 'Unknown';
+                console.log(`[DEBUG] New member detected: ${username}, contributed: ${currentContributed}`);
+            }
+            
+            // 0以上の差分があれば追加
+            if (gxpGained >= 0) {
+                rankings.push({
+                    username: username,
+                    gxpGained: gxpGained,
+                    currentTotal: currentContributed
+                });
             }
         }
         
@@ -403,8 +419,8 @@ async function handleGxpRanking(interaction) {
             .setColor(0x00AE86)
             .setTimestamp();
         
-        // 獲得GXPが0より大きいメンバーのみをフィルタリング
-        const activeRankings = rankings.filter(member => member.gxpGained > 0);
+        // 獲得GXPが0以上のメンバーをフィルタリング（0の場合も表示）
+        const activeRankings = rankings.filter(member => member.gxpGained >= 0);
         
         if (activeRankings.length === 0) {
             embed.setDescription(
@@ -477,16 +493,28 @@ async function handleRaidRanking(interaction) {
         for (const [uuid, currentMember] of Object.entries(guildData.members)) {
             const savedMember = Object.values(currentData.members).find(m => m.uuid === uuid);
             
+            let raidsCompleted = 0;
+            let username = 'Unknown';
+            const currentTotal = currentMember.raids?.total || 0;
+            
             if (savedMember) {
-                const raidsCompleted = (currentMember.raids?.total || 0) - (savedMember.raids?.total || 0);
-                
-                if (raidsCompleted > 0) {
-                    rankings.push({
-                        username: currentMember.username || savedMember.username || 'Unknown',
-                        raidsCompleted: raidsCompleted,
-                        currentTotal: currentMember.raids?.total || 0
-                    });
-                }
+                // 既存メンバーの場合は差分を計算
+                const savedRaids = savedMember.raids?.total || 0;
+                raidsCompleted = currentTotal - savedRaids;
+                username = currentMember.username || savedMember.username || 'Unknown';
+            } else {
+                // 新しいメンバーの場合は全てのレイド数が今週の完了数
+                raidsCompleted = currentTotal;
+                username = currentMember.username || 'Unknown';
+                console.log(`[DEBUG] New member detected for raids: ${username}, raids: ${currentTotal}`);
+            }
+            
+            if (raidsCompleted >= 0) {
+                rankings.push({
+                    username: username,
+                    raidsCompleted: raidsCompleted,
+                    currentTotal: currentTotal
+                });
             }
         }
         
@@ -510,8 +538,8 @@ async function handleRaidRanking(interaction) {
             .setColor(0xFF6B6B)
             .setTimestamp();
         
-        // レイドを完了したメンバーのみをフィルタリング
-        const activeRankings = rankings.filter(member => member.raidsCompleted > 0);
+        // レイドを完了したメンバーをフィルタリング（0の場合も表示）
+        const activeRankings = rankings.filter(member => member.raidsCompleted >= 0);
         
         if (activeRankings.length === 0) {
             embed.setDescription(
@@ -600,23 +628,33 @@ async function performWeeklyReset(client) {
                 for (const [uuid, currentMember] of Object.entries(guildData.members)) {
                     const savedMember = Object.values(currentData.members).find(m => m.uuid === uuid);
                     
+                    let gxpGained = 0;
+                    let raidsCompleted = 0;
+                    const username = currentMember.username || 'Unknown';
+                    
                     if (savedMember) {
-                        const gxpGained = (currentMember.contributed || 0) - (savedMember.contributed || 0);
-                        const raidsCompleted = (currentMember.raids?.total || 0) - (savedMember.raids?.total || 0);
-                        
-                        if (gxpGained > 0) {
-                            gxpRankings.push({
-                                username: currentMember.username,
-                                gxpGained: gxpGained
-                            });
-                        }
-                        
-                        if (raidsCompleted > 0) {
-                            raidRankings.push({
-                                username: currentMember.username,
-                                raidsCompleted: raidsCompleted
-                            });
-                        }
+                        // 既存メンバーの場合は差分を計算
+                        gxpGained = (currentMember.contributed || 0) - (savedMember.contributed || 0);
+                        raidsCompleted = (currentMember.raids?.total || 0) - (savedMember.raids?.total || 0);
+                    } else {
+                        // 新しいメンバーの場合は全ての値が今週の獲得量
+                        gxpGained = currentMember.contributed || 0;
+                        raidsCompleted = currentMember.raids?.total || 0;
+                        console.log(`[DEBUG] New member in weekly reset: ${username}, contributed: ${gxpGained}, raids: ${raidsCompleted}`);
+                    }
+                    
+                    if (gxpGained >= 0) {
+                        gxpRankings.push({
+                            username: username,
+                            gxpGained: gxpGained
+                        });
+                    }
+                    
+                    if (raidsCompleted >= 0) {
+                        raidRankings.push({
+                            username: username,
+                            raidsCompleted: raidsCompleted
+                        });
                     }
                 }
                 

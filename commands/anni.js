@@ -32,6 +32,17 @@ module.exports = {
             subcommand
                 .setName('timer')
                 .setDescription('AI予測に基づくスマートカウントダウンタイマーを開始')
+                .addStringOption(option =>
+                    option
+                        .setName('timezone')
+                        .setDescription('表示するタイムゾーン')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: 'JST (日本標準時)', value: 'jst' },
+                            { name: 'UTC (協定世界時)', value: 'utc' },
+                            { name: '両方 (JST + UTC)', value: 'both' }
+                        )
+                )
         )
         .addSubcommand(subcommand =>
             subcommand
@@ -172,6 +183,9 @@ async function handleSmartTimer(interaction) {
     await interaction.deferReply();
     
     try {
+        // タイムゾーンオプションを取得
+        const timezone = interaction.options.getString('timezone') || 'jst';
+        
         // AI予測システムから次回イベント時刻を取得
         const hybridSystem = new HybridPredictionSystem();
         const prediction = await hybridSystem.getOptimalPrediction();
@@ -202,12 +216,24 @@ async function handleSmartTimer(interaction) {
         const minutes = Math.floor((timeUntil % (60 * 60 * 1000)) / (60 * 1000));
         const seconds = Math.floor((timeUntil % (60 * 1000)) / 1000);
         
+        // タイムゾーンに基づいて時刻表示を生成
+        let timeDisplay = '';
+        if (timezone === 'jst' || timezone === 'both') {
+            const jstTime = targetDate.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            timeDisplay += `🗾 **JST (日本標準時):** ${jstTime}\n`;
+        }
+        if (timezone === 'utc' || timezone === 'both') {
+            const utcTime = targetDate.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+            timeDisplay += `🌐 **UTC (協定世界時):** ${utcTime}\n`;
+        }
+        
         const embed = new EmbedBuilder()
             .setTitle('🤖 AI Smart Countdown Timer')
             .setDescription(`🔮 **AI予測に基づくスマートタイマー**\n\n` +
                           `⏰ **Time Remaining**\n` +
                           `\`\`\`${days}d ${hours}h ${minutes}m ${seconds}s\`\`\`\n` +
                           `📅 **Predicted Start Time**\n` +
+                          `${timeDisplay}` +
                           `<t:${Math.floor(targetDate.getTime() / 1000)}:F>\n` +
                           `<t:${Math.floor(targetDate.getTime() / 1000)}:R>\n\n` +
                           `📊 **Prediction Quality**\n` +
@@ -231,7 +257,8 @@ async function handleSmartTimer(interaction) {
             confidence: prediction.confidence,
             method: prediction.method || 'AI',
             lastPrediction: prediction,
-            isSmartTimer: true
+            isSmartTimer: true,
+            timezone: timezone
         });
         
         // スマートタイマー情報を保存（bot再起動時の復元用）
@@ -244,7 +271,8 @@ async function handleSmartTimer(interaction) {
             confidence: prediction.confidence,
             method: prediction.method || 'AI',
             lastUpdate: now.toISOString(),
-            prediction: prediction
+            prediction: prediction,
+            timezone: timezone
         };
         fs.writeFileSync(smartTimerPath, JSON.stringify(timerInfo, null, 2));
         
@@ -611,7 +639,8 @@ async function restoreSmartTimers(client) {
                 targetTime: timerData.targetTime,
                 confidence: timerData.confidence || timerData.prediction?.confidence || 50,
                 method: timerData.method || timerData.prediction?.method || 'AI',
-                isSmartTimer: true
+                isSmartTimer: true,
+                timezone: timerData.timezone || 'jst'
             });
             
             console.log(`[INFO] Smart timer restored: ${timerData.messageId}`);

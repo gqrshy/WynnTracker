@@ -4,10 +4,8 @@ const config = require('../config');
 const fs = require('fs');
 const path = require('path');
 const rateLimiter = require('../utils/rateLimiter');
-
-// JSONデータを読み込み
-const aspectsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/aspects.json'), 'utf8'));
-const gambitsData = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/gambits.json'), 'utf8'));
+const dataCache = require('../utils/dataCache');
+const ErrorHandler = require('../utils/errorHandler');
 
 // レイド名のマッピング（APIのregion名 → 表示名）
 const RAID_NAMES = {
@@ -47,8 +45,7 @@ module.exports = {
                         .setRequired(false)
                         .addChoices(
                             { name: 'Japanese only (日本語のみ)', value: 'ja' },
-                            { name: 'English only (英語のみ)', value: 'en' },
-                            { name: 'Both languages (両方)', value: 'both' }
+                            { name: 'English only (英語のみ)', value: 'en' }
                         )
                 )
         ),
@@ -66,10 +63,8 @@ async function handleAspectPool(interaction) {
     // レート制限チェック
     const rateLimitCheck = rateLimiter.canUseCommand(interaction.user.id, 'raid_aspectpool');
     if (!rateLimitCheck.allowed) {
-        await interaction.reply({
-            content: `⏳ このコマンドは1分に1回しか使用できません。\nあと **${rateLimitCheck.waitTime}秒** お待ちください。`,
-            ephemeral: true
-        });
+        const errorResponse = ErrorHandler.handleRateLimitError(rateLimitCheck.waitTime, 'raid aspectpool');
+        await interaction.reply(errorResponse);
         return;
     }
     
@@ -289,16 +284,7 @@ async function handleAspectPool(interaction) {
         await interaction.editReply({ embeds: [embed] });
         
     } catch (error) {
-        console.error('[ERROR] AspectPool取得エラー:', error);
-        try {
-            await interaction.editReply(
-                '❌ アスペクトプール情報の取得中にエラーが発生しました。\n' +
-                'Wynnventory (wynnventory.com) で最新情報を確認してください。'
-            );
-        } catch (replyError) {
-            console.error('[ERROR] インタラクションへの返信に失敗しました:', replyError);
-            // インタラクションが無効な場合は何もしない
-        }
+        await ErrorHandler.handleCommandError(error, 'raid aspectpool', interaction);
     }
 }
 
@@ -333,7 +319,7 @@ async function getRaidPoolData() {
         return null;
         
     } catch (error) {
-        console.error('[ERROR] Raid pool データ取得エラー:', error.response?.status || error.message);
+        console.error('[ERROR] Raid pool データ取得エラー:', ErrorHandler.handleAPIError(error, 'Wynnventory Raid Pool'));
         return null;
     }
 }
@@ -357,7 +343,7 @@ async function getCurrentGambits() {
         return null;
         
     } catch (error) {
-        console.error('[ERROR] Gambits データ取得エラー:', error.response?.status || error.message);
+        console.error('[ERROR] Gambits データ取得エラー:', ErrorHandler.handleAPIError(error, 'Wynnventory Gambits'));
         return null;
     }
 }
@@ -399,26 +385,7 @@ function getClassFromAspectName(aspectName) {
 
 // アスペクトの説明を取得（日本語と英語両方）
 function getAspectDescription(aspectName) {
-    const aspect = aspectsData.aspects[aspectName];
-    if (!aspect) return null;
-    
-    // 新しい形式（オブジェクト）の場合
-    if (typeof aspect === 'object' && aspect.ja && aspect.en) {
-        return {
-            ja: aspect.ja,
-            en: aspect.en
-        };
-    }
-    
-    // 旧形式（文字列）の場合は日本語のみ
-    if (typeof aspect === 'string') {
-        return {
-            ja: aspect,
-            en: null
-        };
-    }
-    
-    return null;
+    return dataCache.getAspectDescription(aspectName);
 }
 
 // テキストを指定された幅で改行し、各行をインラインコードブロックで囲む
@@ -598,19 +565,17 @@ function extractAspectsByRarity(items, language = 'both') {
 
 // Gambit説明の処理（言語オプションに対応）
 function formatGambitDescription(description, language = 'en') {
-    // 完全一致の翻訳があるか確認
-    if (gambitsData.gambits[description]) {
-        const gambitData = gambitsData.gambits[description];
-        
-        // 新しい形式（オブジェクト）の場合
-        if (typeof gambitData === 'object' && gambitData.ja && gambitData.en) {
-            return formatGambitText(gambitData, language);
-        }
-        
-        // 旧形式（文字列）の場合は日本語として扱う
-        if (typeof gambitData === 'string') {
-            return formatGambitText({ ja: gambitData, en: description }, language);
-        }
+    // キャッシュからGambitデータを取得
+    const gambitData = dataCache.getGambitDescription(description);
+    
+    if (gambitData) {
+        return formatGambitText(gambitData, language);
+    }
+    
+    // キャッシュにない場合は、gambits.jsonから直接取得してパターンマッチング
+    const gambitsData = dataCache.getData('gambits.json');
+    if (!gambitsData || !gambitsData.patterns) {
+        return formatGambitText({ ja: description, en: description }, language);
     }
     
     // パターンマッチングで翻訳（旧システム用）
