@@ -1,24 +1,18 @@
 {
-  "startTime": "2025-07-15T11:05:04.332Z",
+  "startTime": "2025-07-15T12:21:30.000Z",
   "setBy": "auto_sync",
-  "setAt": "2025-07-15T14:12:28.624Z",
-  "confidence": 89,
+  "setAt": "2025-07-15T15:55:10.020Z",
+  "confidence": 93,
   "sources": [
-    "Local",
-    "ARIMA"
+    "Local"
   ],
-  "agreement": 87,
+  "agreement": 100,
   "method": "hybrid",
   "predictions": [
     {
       "source": "Local",
       "time": "2025-07-15T12:21:30.000Z",
       "confidence": 86
-    },
-    {
-      "source": "ARIMA",
-      "time": "2025-07-15T09:55:53.096Z",
-      "confidence": 95
     }
   ]
 }

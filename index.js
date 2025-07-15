@@ -10,7 +10,8 @@ const dataCache = require('./utils/dataCache');
 const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
     ] 
 });
 
@@ -143,7 +144,7 @@ client.on('interactionCreate', async interaction => {
         
         const errorMessage = {
             content: 'コマンドの実行中にエラーが発生しました',
-            ephemeral: true
+            flags: 64
         };
 
         if (interaction.replied || interaction.deferred) {

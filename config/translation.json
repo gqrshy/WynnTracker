@@ -1,0 +1,21 @@
+{
+  "engine": {
+    "apiKey": "0af03f84-0746-4618-810c-a66c015ba2fe:fx",
+    "rateLimit": 150,
+    "timeout": 4000
+  },
+  "cache": {
+    "maxSize": 1500,
+    "defaultTTL": 2700000,
+    "cleanupInterval": 180000
+  },
+  "batch": {
+    "delay": 80,
+    "timeout": 25000,
+    "workerCount": 3
+  },
+  "metrics": {
+    "logMetrics": true,
+    "logInterval": 240000
+  }
+}
