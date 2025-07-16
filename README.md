@@ -1,85 +1,119 @@
 # WynnTracker
 
-WynncraftのプレイヤーステータスやAnnihilationイベントを管理する高機能Discord Bot
+<div align="center">
+  <h3>Advanced Discord Bot for Wynncraft Community Management</h3>
+  <p>A comprehensive Discord bot for tracking Wynncraft player statistics, Annihilation events, guild management, and market analysis with AI-powered predictions.</p>
+</div>
 
-## 概要
+## 🛠 Tech Stack
 
-WynnTrackerは、Wynncraftプレイヤー向けの包括的なDiscord Botです。ゲームイベントの追跡、プレイヤー統計の表示、ギルド管理、マーケット検索など、Wynncraftコミュニティに必要な様々な機能を提供します。
+<p align="center">
+  <img src="https://img.shields.io/badge/-Node.js-339933.svg?logo=node.js&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-Discord.js-5865F2.svg?logo=discord&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-Python-3776AB.svg?logo=python&style=for-the-badge&logoColor=white">
+  <img src="https://img.shields.io/badge/-JavaScript-F7DF1E.svg?logo=javascript&style=for-the-badge&logoColor=black">
+  <img src="https://img.shields.io/badge/-Puppeteer-40B5A4.svg?logo=puppeteer&style=for-the-badge&logoColor=white">
+</p>
 
-## 主な機能
+## 📋 Table of Contents
 
-### 🎯 Annihilationイベント管理 (`/anni`)
-- **AI予測システム**: ARIMAモデルを使用した次回イベント時刻の予測
-- **スマートカウントダウン**: 信頼度評価付きの自動タイマー
-- **手動タイマー設定**: 従来の追跡方法もサポート
-- **アラート通知**: ロールメンション付きの通知機能
-- **履歴分析**: 過去のイベントデータの追跡と分析
-- **タイムゾーン対応**: JST/UTC両対応
+1. [Features](#features)
+2. [Command Status](#command-status)
+3. [Project Structure](#project-structure)
+4. [Prerequisites](#prerequisites)
+5. [Installation](#installation)
+6. [Configuration](#configuration)
+7. [Usage](#usage)
+8. [API Integration](#api-integration)
+9. [Troubleshooting](#troubleshooting)
+10. [License](#license)
 
-### 👥 ギルド管理 (`/guild`)
-- ギルドメンバーのランキングと統計情報の追跡
-- 週次ランキングシステム（自動リセット機能付き）
-- 経験値追跡とリーダーボード
-- Wynncraft API v3統合
-- "Just Here After Work" ギルド（SKJタグ）に特化
+## ✨ Features
 
-### 📊 プレイヤー統計 (`/wynn`)
-- 包括的なプレイヤー統計の表示
-- レベル進行状況の視覚的プログレスバー
-- プレイ時間追跡
-- キャラクタークラス情報
-- Wynncraft Player API統合
+### Annihilation Event Tracking
+- **AI Prediction System**: ARIMA model-based next event time prediction
+- **Smart Countdown**: Automatic timers with confidence ratings
+- **Manual Timer Support**: Traditional tracking methods
+- **Alert Notifications**: Role mention notifications
+- **Historical Analysis**: Past event data tracking and analysis
+- **Timezone Support**: JST/UTC compatibility
 
-### 💰 トレードマーケット検索 (`/tm`)
-- Wyncraftのトレードマーケット検索
-- Wynncraft通貨での価格表示（Emeralds, EB, LE, STX）
-- カスタムDiscord絵文字でのアイテムレアリティ表示
-- Wynnventory APIからのリアルタイムマーケットデータ
+### Guild Management
+- **Member Rankings**: Track guild member statistics and rankings
+- **Weekly Ranking System**: Automatic reset functionality
+- **Experience Tracking**: XP progress and leaderboards
+- **Wynncraft API v3 Integration**: Real-time data synchronization
+- **SKJ Guild Specialized**: Optimized for "Just Here After Work" guild
 
-### 🎲 Lootrun情報 (`/lr`)
-- 各キャンプのルートプール情報
-- Mythicアイテムの価格ランキング
-- マーケット価値分析
+### Player Statistics
+- **Comprehensive Player Stats**: Detailed player information display
+- **Level Progress Visualization**: Visual progress bars
+- **Playtime Tracking**: Monitor player activity
+- **Character Class Information**: Class-specific data
+- **Wynncraft Player API Integration**: Live player data
 
-### ⚔️ レイド情報 (`/raid`)
-- 週次レイドアスペクトプール
-- 異なるレアリティ対応（Mythic, Fabled, Legendary）
-- バイリンガルサポート（日本語/英語）
+### Market Analysis
+- **Trade Market Search**: Wynncraft marketplace integration
+- **Multi-Currency Support**: Emeralds, EB, LE, STX pricing
+- **Rarity Display**: Custom Discord emoji for item rarities
+- **Real-time Market Data**: Wynnventory API integration
 
-### 🌐 翻訳機能 (`/translate`)
-- メッセージ翻訳機能
-- 言語設定管理
+### Lootrun Information
+- **Loot Pool Information**: Detailed camp route data
+- **Mythic Item Pricing**: Price rankings and analysis
+- **Market Value Analysis**: Comprehensive pricing insights
+- **Weekly Raid Aspect Pools**: Different rarity support (Mythic, Fabled, Legendary)
 
-### ❓ ヘルプシステム (`/help`)
-- インタラクティブなページ分割されたヘルプメニュー
-- 詳細なコマンドドキュメント
-- 管理者専用コマンドセクション
+### Translation Support
+- **Bilingual Support**: Japanese/English language support
+- **Message Translation**: Real-time translation capabilities
+- **Language Settings Management**: User preference storage
 
-## 技術仕様
+### Help System
+- **Interactive Paginated Menus**: Easy navigation
+- **Detailed Command Documentation**: Comprehensive guides
+- **Admin-only Command Sections**: Permission-based access
 
-### 使用技術
-- **Node.js** - メインランタイム
-- **Discord.js v14** - Discord Bot フレームワーク
-- **Python** - AI/ML予測エンジン
-- **Axios** - APIリクエスト
-- **Puppeteer** - Webスクレイピング
-- **Node-cron** - スケジュールタスク
+## 🚦 Command Status
 
-### プロジェクト構造
+### ✅ Fully Operational Commands
+- **`help` commands** - Interactive help system with pagination
+- **`wynn` commands** - Player statistics and information
+- **`raid` commands** - Raid information and weekly pools
+- **`lr` commands** - Lootrun data and market analysis
+
+### 🧪 Testing Phase Commands
+- **`anni` commands** - Annihilation event tracking
+  - **Known Issue**: ARIMA model predictions have ~1 hour accuracy variance
+  - **Status**: Not yet production-ready
+
+- **`tm` commands** - Trade market search
+  - **Known Issues**: Style integration incomplete, insufficient testing
+  - **Status**: Feature development in progress
+
+- **`translate` commands** - Translation functionality
+  - **Status**: Redis implementation planned, private bot features in development
+
+- **`guild` commands** - Guild management system
+  - **Limitation**: Currently optimized only for "[SKJ] Just Here After Work" guild
+  - **Status**: Expanding compatibility for other guilds
+
+## 📁 Project Structure
+
 ```
 WynnTracker/
-├── index.js              # メインBotエントリーポイント
-├── config.js             # 設定管理
-├── commands/             # スラッシュコマンドモジュール
-│   ├── anni.js          # Annihilation追跡
-│   ├── guild.js         # ギルド管理
-│   ├── help.js          # ヘルプシステム
-│   ├── lr.js            # Lootrunコマンド
-│   ├── raid.js          # レイド情報
-│   ├── tm.js            # トレードマーケット検索
-│   ├── translate.js     # 翻訳機能
-│   └── wynn.js          # プレイヤー統計
-├── data/                # 永続データストレージ
+├── index.js                    # Main bot entry point
+├── config.js                   # Configuration management
+├── commands/                   # Slash command modules
+│   ├── anni.js                # Annihilation tracking
+│   ├── guild.js               # Guild management
+│   ├── help.js                # Help system
+│   ├── lr.js                  # Lootrun commands
+│   ├── raid.js                # Raid information
+│   ├── tm.js                  # Trade market search
+│   ├── translate.js           # Translation features
+│   └── wynn.js                # Player statistics
+├── data/                      # Persistent data storage
 │   ├── anni_history.json
 │   ├── annihilation.json
 │   ├── aspects.json
@@ -87,9 +121,9 @@ WynnTracker/
 │   ├── guild_rankings.json
 │   ├── prediction_cache.json
 │   └── translate_settings.json
-├── python/              # Python ML統合
+├── python/                    # Python ML integration
 │   └── arima_predictor.py
-└── utils/               # ユーティリティモジュール
+└── utils/                     # Utility modules
     ├── anniPredictionEngine.js
     ├── autoSyncSystem.js
     ├── configManager.js
@@ -100,93 +134,148 @@ WynnTracker/
     └── wynncraft-api.js
 ```
 
-## セットアップ
+## 📋 Prerequisites
 
-### 必要条件
-- Node.js v16.9.0以上
-- Python 3.8以上
-- Discord Bot トークン
+- **Node.js** v16.9.0 or higher
+- **Python** 3.8 or higher
+- **Discord Bot Token**
+- **Discord Application** with appropriate permissions
 
-### インストール手順
+## 🚀 Installation
 
-1. リポジトリをクローン
+### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/WynnTracker.git
+git clone https://github.com/gqrshy/WynnTracker.git
 cd WynnTracker
 ```
 
-2. Node.js依存関係をインストール
+### 2. Install Node.js Dependencies
 ```bash
 npm install
 ```
 
-3. Python依存関係をインストール
+### 3. Install Python Dependencies
 ```bash
+# Using the provided script
 ./install_python_deps.sh
-# または
+
+# Or manually
 pip install -r requirements.txt
 ```
 
-4. 環境変数を設定
-```bash
-# .envファイルを作成
+### 4. Environment Setup
+Create a `.env` file in the root directory:
+
+```env
 DISCORD_TOKEN=your_discord_bot_token
 CLIENT_ID=your_client_id
 GUILD_ID=your_guild_id
 ```
 
-5. Botを起動
+### 5. Start the Bot
 ```bash
 npm start
 ```
 
-## 設定
+## ⚙️ Configuration
 
-`config.js`ファイルで以下の設定が可能です：
-- API エンドポイント
-- 更新間隔
-- デフォルト設定
-- 権限設定
+### Environment Variables
 
-## API統合
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `DISCORD_TOKEN` | Discord bot token | ✅ Yes | - |
+| `CLIENT_ID` | Discord application client ID | ✅ Yes | - |
+| `GUILD_ID` | Target Discord guild ID | ✅ Yes | - |
 
-- **Wynncraft Official API v3** - プレイヤーとギルドデータ
-- **Wynnventory API** - マーケットデータ
-- **カスタム予測エンドポイント** - AI予測データ
-- **GitHub-hosted静的アセット** - 画像とリソース
+### Bot Configuration
 
-## 機能の詳細
+The `config.js` file allows customization of:
+- API endpoints and rate limits
+- Update intervals and timeouts
+- Default settings and preferences
+- Permission configurations
+- Feature toggles
 
-### 自動同期システム
-- 予測データの自動同期
-- 10秒間隔でのリアルタイムタイマー更新
-- Bot再起動後のデータ永続性
+## 🎮 Usage
 
-### セキュリティ機能
-- 管理者専用コマンド
-- APIレート制限
-- エラー分離とハンドリング
-- 環境変数による設定管理
+### Basic Commands
 
-### パフォーマンス最適化
-- データキャッシング
-- 効率的なAPI呼び出し
-- 非同期処理
+```bash
+# Display help menu
+/help
 
-## 貢献
+# Check player statistics
+/wynn player <username>
 
-プルリクエストを歓迎します。大きな変更を行う場合は、まずイシューを開いて変更内容について議論してください。
+# Search trade market
+/tm search <item_name>
 
-## ライセンス
+# View lootrun information
+/lr camps
 
-[MITライセンス](LICENSE)
+# Guild rankings (SKJ guild)
+/guild rankings
+```
 
-## クレジット
+### Admin Commands
 
-- [Wynncraft Official API](https://docs.wynncraft.com/docs/) - プレイヤー統計コマンドで使用
-- [nori.fish](https://nori.fish/) - インスピレーション
-- [wynnpool.com](https://www.wynnpool.com/annihilation) - インスピレーション
+```bash
+# Manage Annihilation timers
+/anni set <time>
 
-## サポート
+# Guild management
+/guild sync
 
-問題や質問がある場合は、[イシューを作成](https://github.com/yourusername/WynnTracker/issues)してください。
+# Translation settings
+/translate settings
+```
+
+## 🔌 API Integration
+
+### External APIs
+- **[Wynncraft Official API v3](https://docs.wynncraft.com/)** - Player and guild data
+- **[Wynnventory API](https://wynnventory.com/)** - Market data and pricing
+- **Custom Prediction Endpoints** - AI prediction data
+- **GitHub-hosted Static Assets** - Images and resources
+
+### Data Sources
+- Real-time player statistics
+- Live market pricing data
+- Historical event tracking
+- Guild member analytics
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License (GPL)**. 
+
+**You are free to use this code**, but any modifications must be distributed under the same GPL license. This ensures that improvements and modifications remain open source and benefit the entire community.
+
+For more details, see the [LICENSE](LICENSE) file in this repository.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+### Development Guidelines
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 🙏 Acknowledgments
+
+- **[Wynncraft Official API](https://docs.wynncraft.com/docs/)** - Player statistics integration
+- **[nori.fish](https://nori.fish/)** - Inspiration for design and features
+- **[wynnpool.com](https://www.wynnpool.com/annihilation)** - Annihilation tracking inspiration
+- **Wynncraft Community** - Continuous feedback and support
+
+## 📞 Support
+
+If you encounter any issues or have questions, please [create an issue](https://github.com/gqrshy/WynnTracker/issues) on GitHub.
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for the Wynncraft community</p>
+</div>
