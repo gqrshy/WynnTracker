@@ -30,6 +30,7 @@ const DEFAULT_CONFIG = {
 // 翻訳サービスの初期化
 let translationService;
 let settings = {};
+const webhookCache = new Map();
 
 function loadConfig() {
     try {
@@ -87,6 +88,75 @@ function initialize() {
             console.log(`[Translation] Batch processed: ${data.successful}/${data.successful + data.failed} messages`);
         });
         
+        translationService.on('translationsReady', async (data) => {
+            const { channelId, translations } = data;
+            const channel = client.channels.cache.get(channelId);
+            
+            if (!channel) return;
+            
+            // Webhookをキャッシュから取得または作成
+            let webhook;
+            const cacheKey = channelId;
+            const cached = webhookCache.get(cacheKey);
+            
+            // キャッシュが有効な場合（1時間以内）
+            if (cached && Date.now() - cached.timestamp < 3600000) {
+                webhook = cached.webhook;
+            } else {
+                try {
+                    const webhooks = await channel.fetchWebhooks();
+                    webhook = webhooks.find(wh => wh.name === 'WynnTracker Translator');
+                    
+                    if (!webhook) {
+                        webhook = await channel.createWebhook({
+                            name: 'WynnTracker Translator',
+                            avatar: client.user.displayAvatarURL()
+                        });
+                    }
+                    
+                    // キャッシュに保存
+                    webhookCache.set(cacheKey, {
+                        webhook,
+                        timestamp: Date.now()
+                    });
+                } catch (error) {
+                    console.error('[Translation] Failed to create/fetch webhook:', error);
+                    return;
+                }
+            }
+            
+            // 並列でWebhook送信を処理（最大5件同時）
+            const sendPromises = translations
+                .filter(result => result && result.translatedText && result.message)
+                .map(async (result) => {
+                    try {
+                        // 言語コードをインラインコードブロックで囲む
+                        const langCode = `\`${result.targetLang}\``;
+                        const formattedText = `${langCode} ${result.translatedText}`;
+                        
+                        // アバターURLを構築
+                        const avatarURL = result.message.author.avatar 
+                            ? `https://cdn.discordapp.com/avatars/${result.message.author.id}/${result.message.author.avatar}.png`
+                            : `https://cdn.discordapp.com/embed/avatars/${parseInt(result.message.author.discriminator) % 5}.png`;
+                        
+                        // Webhookで翻訳結果を送信
+                        return webhook.send({
+                            content: formattedText,
+                            username: result.message.author.username,
+                            avatarURL: avatarURL
+                        });
+                    } catch (error) {
+                        console.error('[Translation] Failed to send translation:', error);
+                    }
+                });
+            
+            // 並列実行（最大5件ずつ）
+            const chunkSize = 5;
+            for (let i = 0; i < sendPromises.length; i += chunkSize) {
+                await Promise.all(sendPromises.slice(i, i + chunkSize));
+            }
+        });
+        
         console.log('[Translation] Service initialized');
     } catch (error) {
         console.error('[Translation] Initialization error:', error);
@@ -112,7 +182,13 @@ const LANGUAGE_CODES = {
     'KO': '한국어'
 };
 
+let client = null;
+
 module.exports = {
+    setClient(c) {
+        client = c;
+    },
+    
     data: new SlashCommandBuilder()
         .setName('translate')
         .setDescription('高性能翻訳システム - DeepL API使用')

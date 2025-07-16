@@ -29,6 +29,11 @@ for (const file of commandFiles) {
     if ('data' in command && 'execute' in command) {
         client.commands.set(command.data.name, command);
         console.log(`[INFO] コマンドを読み込みました: ${command.data.name}`);
+        
+        // translateコマンドの場合はclientを設定
+        if (command.data.name === 'translate' && command.setClient) {
+            command.setClient(client);
+        }
     } else {
         console.log(`[WARNING] ${filePath} に必要な "data" または "execute" プロパティがありません`);
     }

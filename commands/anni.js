@@ -31,7 +31,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('timer')
-                .setDescription('AI予測に基づくスマートカウントダウンタイマーを開始')
+                .setDescription('AI予測に基づくカウントダウンタイマーを開始')
                 .addStringOption(option =>
                     option
                         .setName('timezone')
@@ -46,50 +46,8 @@ module.exports = {
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('timer-manual')
-                .setDescription('手動でカウントダウンタイマーを設定（従来方式）')
-                .addStringOption(option =>
-                    option
-                        .setName('datetime')
-                        .setDescription('開始日時 (YYYY-MM-DD HH:MM:SS 24時間形式)')
-                        .setRequired(true)
-                )
-                .addStringOption(option =>
-                    option
-                        .setName('timezone')
-                        .setDescription('タイムゾーン')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'JST (日本標準時)', value: 'JST' },
-                            { name: 'UTC (協定世界時)', value: 'UTC' }
-                        )
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('alert')
-                .setDescription('Annihilation通知を設定')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('mention')
-                .setDescription('メンションするロールを設定（管理者のみ）')
-                .addRoleOption(option =>
-                    option
-                        .setName('role')
-                        .setDescription('メンションするロール')
-                        .setRequired(true)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
                 .setName('predict')
-                .setDescription('高精度予測システムで次のAnnihilationを予測')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('compare')
-                .setDescription('複数ソースからの予測を比較')
+                .setDescription('次のAnnihilationを予測')
         )
         .addSubcommand(subcommand =>
             subcommand
@@ -159,22 +117,12 @@ module.exports = {
         
         if (subcommand === 'timer') {
             await handleSmartTimer(interaction);
-        } else if (subcommand === 'timer-manual') {
-            await handleTimer(interaction);
-        } else if (subcommand === 'alert') {
-            await handleAlert(interaction);
-        } else if (subcommand === 'mention') {
-            await handleMentionSet(interaction);
         } else if (subcommand === 'predict') {
             await handlePredict(interaction);
-        } else if (subcommand === 'compare') {
-            await handleCompare(interaction);
         } else if (subcommand === 'history') {
             await handleHistory(interaction);
         } else if (subcommand === 'record') {
             await handleRecord(interaction);
-        } else if (subcommand === 'debug') {
-            await handleDebug(interaction);
         }
     }
 };
@@ -199,11 +147,34 @@ async function handleSmartTimer(interaction) {
         const targetDate = prediction.predictedTime;
         const now = new Date();
         
-        // 既に過去の時刻の場合は警告
+        // 既に過去の時刻の場合は次の予測を取得
         if (targetDate <= now) {
-            return await interaction.editReply({
-                content: '⚠️ 予測された時刻は既に過去です。`/anni reset` でシステムをリセットしてください。',
-            });
+            console.log('[INFO] 予測時刻が過去のため、次の予測を取得します');
+            
+            // 履歴に現在の予測を追加（学習データとして）
+            const historyPath = path.join(__dirname, '..', 'data', 'anni_history.json');
+            if (fs.existsSync(historyPath)) {
+                const history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+                history.events.push({
+                    timestamp: prediction.predictedTime.toISOString(),
+                    source: 'auto_predicted',
+                    confidence: prediction.confidence,
+                    addedAt: new Date().toISOString()
+                });
+                fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
+            }
+            
+            // 新しい予測を取得
+            await hybridSystem.clearCache(); // キャッシュをクリア
+            prediction = await hybridSystem.getOptimalPrediction();
+            
+            if (!prediction || prediction.predictedTime <= now) {
+                return await interaction.editReply({
+                    content: '❌ 有効な予測を取得できませんでした。`/anni history reset confirm:true` で履歴をリセットしてください。',
+                });
+            }
+            
+            targetDate = prediction.predictedTime;
         }
         
         // 既存のタイマーをクリア（新しいタイマーが設定されたため）
@@ -286,18 +257,6 @@ async function handleSmartTimer(interaction) {
     }
 }
 
-// 基本的なハンドラー関数を追加（最小限の実装）
-async function handleTimer(interaction) {
-    await interaction.reply({ content: '⚠️ 手動タイマー機能は準備中です。', ephemeral: true });
-}
-
-async function handleAlert(interaction) {
-    await interaction.reply({ content: '⚠️ 通知設定機能は準備中です。', ephemeral: true });
-}
-
-async function handleMentionSet(interaction) {
-    await interaction.reply({ content: '⚠️ メンション設定機能は準備中です。', ephemeral: true });
-}
 
 async function handlePredict(interaction) {
     await interaction.deferReply();
@@ -337,9 +296,6 @@ async function handlePredict(interaction) {
     }
 }
 
-async function handleCompare(interaction) {
-    await interaction.reply({ content: '⚠️ 予測比較機能は準備中です。', ephemeral: true });
-}
 
 async function handleHistory(interaction) {
     const action = interaction.options.getString('action') || 'show';
@@ -597,9 +553,6 @@ async function handleRecord(interaction) {
 }
 
 
-async function handleDebug(interaction) {
-    await interaction.reply({ content: '⚠️ デバッグ機能は準備中です。', ephemeral: true });
-}
 
 // 通知関連の基本関数
 function clearNotifications() {

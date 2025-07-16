@@ -37,9 +37,7 @@
       "Bash(npm run:*)",
       "Bash(curl:*)",
       "Bash(NODE_ENV=test node -e \"\nconst raidModule = require(''./commands/raid.js'');\nconsole.log(''Available functions:'', Object.keys(raidModule));\n\nif (raidModule.formatAspectDescription) {\n  const testAspect = {\n    ja: ''メインアタックの射程距離を最大5ブロック拡張する'',\n    en: ''+1.5 to +5 blocks Main Attack range''\n  };\n\n  console.log(''=== Language: ja ==='');\n  console.log(raidModule.formatAspectDescription(testAspect, ''ja''));\n  \n  console.log(''=== Language: en ==='');\n  console.log(raidModule.formatAspectDescription(testAspect, ''en''));\n  \n  console.log(''=== Language: both ==='');\n  console.log(raidModule.formatAspectDescription(testAspect, ''both''));\n} else {\n  console.log(''formatAspectDescription not found'');\n}\n\")",
-      "Bash(timeout:*)",
-      "Bash(taskkill:*)",
-      "Bash(del C:UsersgqrshWynnTrackerdatatranslate_webhooks.json)"
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
