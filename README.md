@@ -137,9 +137,18 @@ WynnTracker/
 ## 📋 Prerequisites
 
 - **Node.js** v16.9.0 or higher
-- **Python** 3.8 or higher
-- **Discord Bot Token**
-- **Discord Application** with appropriate permissions
+- **Python** 3.8+ (for AI prediction system)
+- **Discord Bot Application** with appropriate permissions
+- **Git** (for cloning the repository)
+
+### Required Python Packages
+- `pandas` - Data manipulation and analysis
+- `statsmodels` - ARIMA statistical modeling
+- `numpy` - Numerical computing
+
+### Optional API Keys
+- **Wynnventory API Key** - Enhanced trade market functionality
+- **DeepL API Key** - High-quality translation service
 
 ## 🚀 Installation
 
@@ -156,21 +165,37 @@ npm install
 
 ### 3. Install Python Dependencies
 ```bash
-# Using the provided script
+# Using the provided script (recommended)
+chmod +x install_python_deps.sh
 ./install_python_deps.sh
 
-# Or manually
-pip install -r requirements.txt
+# Or install manually
+pip3 install pandas statsmodels numpy
 ```
 
 ### 4. Environment Setup
 Create a `.env` file in the root directory:
 
 ```env
+# Required Discord Bot Configuration
 DISCORD_TOKEN=your_discord_bot_token
-CLIENT_ID=your_client_id
-GUILD_ID=your_guild_id
+CLIENT_ID=your_application_client_id
+GUILD_ID=your_target_guild_id
+
+# Optional API Keys (for enhanced functionality)
+WYNNVENTORY_API_KEY=your_wynnventory_api_key
+DEEPL_API_KEY=your_deepl_api_key
 ```
+
+**Environment Variables Explained:**
+
+| Variable | Required | Description | How to Obtain |
+|----------|----------|-------------|---------------|
+| `DISCORD_TOKEN` | ✅ Yes | Discord bot token | [Discord Developer Portal](https://discord.com/developers/applications) → Your App → Bot → Token |
+| `CLIENT_ID` | ✅ Yes | Discord application client ID | [Discord Developer Portal](https://discord.com/developers/applications) → Your App → General Information → Application ID |
+| `GUILD_ID` | ✅ Yes | Target Discord server ID | Enable Developer Mode → Right-click your server → Copy Server ID |
+| `WYNNVENTORY_API_KEY` | ❌ Optional | Wynnventory API access | [Wynnventory Discord](https://discord.gg/rQ3wS5hZME) → Request API access |
+| `DEEPL_API_KEY` | ❌ Optional | DeepL translation API | [DeepL Pro](https://www.deepl.com/pro-api) → Create API key |
 
 ### 5. Start the Bot
 ```bash
@@ -186,106 +211,116 @@ npm start
 | `DISCORD_TOKEN` | Discord bot token | ✅ Yes | - |
 | `CLIENT_ID` | Discord application client ID | ✅ Yes | - |
 | `GUILD_ID` | Target Discord guild ID | ✅ Yes | - |
+| `WYNNVENTORY_API_KEY` | Wynnventory API key for trade market | ❌ Optional | - |
+| `DEEPL_API_KEY` | DeepL API key for translation | ❌ Optional | Free tier available |
 
 ### Bot Configuration
 
-The `config.js` file allows customization of:
-- API endpoints and rate limits
-- Update intervals and timeouts
-- Default settings and preferences
-- Permission configurations
-- Feature toggles
+The `config.js` file manages environment variables and allows:
+- Discord bot authentication
+- API endpoint configuration
+- External service integration
+- Rate limiting compliance
+
+### Additional Configuration Files
+
+- `config/translation.json` - Translation service settings
+- `data/` directory - Persistent data storage for:
+  - Guild rankings (`guild_rankings.json`)
+  - Annihilation history (`anni_history.json`)
+  - Translation settings (`translate_settings.json`)
+  - Prediction cache (`prediction_cache.json`)
 
 ## 🎮 Usage
 
-### 📋 完全な利用可能コマンド一覧
+### 📋 Complete Command Reference
 
-#### 🌟 一般ユーザー向けコマンド
+#### 🌟 General User Commands
 
 ```bash
-# ヘルプメニューを表示
+# Display help menu
 /help
 
-# プレイヤー統計情報を表示
+# Player statistics and information
 /wynn stats mcid:<Minecraft_ID>
 
-# Trade Market検索
-/tm search item:<アイテム名> [unidentified:<true/false>]
+# Trade Market search
+/tm search item:<item_name> [unidentified:<true/false>]
 
-# Lootrun関連情報
+# Lootrun information
 /lr lootpool [page:<1-10>] [camp:<COTL/CP/MH/SI/SE>]
 /lr mythranking
 
-# レイド関連情報
+# Raid information
 /raid aspectpool [rarity:<mythic/fabled/legendary>] [language:<ja/en>]
 
-# ギルドランキング（閲覧）
+# Guild rankings (view only)
 /guild gxp ranking
 /guild raid ranking
 
-# テキスト翻訳（DeepL API使用）
-/translate text text:<翻訳テキスト> [to:<言語>] [from:<言語>]
+# Text translation (DeepL API powered)
+/translate text text:<text_to_translate> [to:<language>] [from:<language>]
 /translate status
 /translate metrics
 /translate health
 ```
 
-#### 🔐 管理者権限必要コマンド
+#### 🔐 Administrator Commands
 
 ```bash
-# AI予測Annihilationタイマー管理
+# AI-powered Annihilation timer management
 /anni timer [timezone:<jst/utc/both>]
 /anni predict
 /anni history [action:<show/reset>] [confirm:<true>]
 /anni record datetime:<YYYY-MM-DD HH:MM:SS> server:<asia/eu/us> [downtime:<true/false>]
 /anni debug
 
-# ギルド管理
+# Guild management
 /guild rank set
 
-# 翻訳システム管理
-/translate auto enabled:<true/false> [channel:<チャンネル>] [target:<EN-US/JA>]
+# Translation system management
+/translate auto enabled:<true/false> [channel:<channel>] [target:<EN-US/JA>]
 /translate cache action:<clear/stats>
 /translate reload
 ```
 
-### 📚 コマンド詳細説明
+### 📚 Command Details
 
-#### `/anni` - AI予測Annihilationタイマーシステム
-- **timer**: ARIMA モデルと深層学習を組み合わせたAI予測システム
-- **predict**: 複数予測手法による次回イベント予測
-- **history**: 過去イベントデータの管理
-- **record**: 新しいイベント発生の手動記録
-- **debug**: 予測システムの内部状態表示
+#### `/anni` - AI-Powered Annihilation Timer System
+- **timer**: ARIMA model + deep learning hybrid prediction system
+- **predict**: Multi-method next event prediction
+- **history**: Historical event data management
+- **record**: Manual event occurrence recording
+- **debug**: Prediction system internal state display
 
-#### `/guild` - ギルド管理システム（SKJ専用最適化）
-- **rank set**: 現在のギルドメンバー統計を記録
-- **gxp ranking**: 今週のGXPランキング表示
-- **raid ranking**: 今週のレイドランキング表示
+#### `/guild` - Guild Management System (SKJ-optimized)
+- **rank set**: Record current guild member statistics
+- **gxp ranking**: Weekly GXP ranking display
+- **raid ranking**: Weekly raid ranking display
 
-#### `/lr` - Lootrun情報システム
-- **lootpool**: 各キャンプの詳細ルートプール情報
-- **mythranking**: Mythicアイテムの市場価格ランキング
+#### `/lr` - Lootrun Information System
+- **lootpool**: Detailed camp loot pool information
+- **mythranking**: Mythic item market price rankings
 
-#### `/raid` - レイド情報システム
-- **aspectpool**: 今週の各レイドアスペクト情報（多言語対応）
+#### `/raid` - Raid Information System
+- **aspectpool**: Weekly raid aspect information (multilingual support)
 
-#### `/tm` - Trade Market検索
-- **search**: Wynnventory APIを使用したリアルタイム市場検索
+#### `/tm` - Trade Market Search
+- **search**: Real-time market search using Wynnventory API
 
-#### `/translate` - 高性能翻訳システム
-- **text**: DeepL APIによる高精度翻訳
-- **auto**: チャンネル単位の自動翻訳設定
-- **status/metrics/health**: システム監視機能
+#### `/translate` - High-Performance Translation System
+- **text**: High-accuracy translation via DeepL API
+- **auto**: Channel-specific automatic translation setup
+- **status/metrics/health**: System monitoring functions
 
-#### `/wynn` - プレイヤー統計システム
-- **stats**: Wynncraft API v3による詳細プレイヤー情報
+#### `/wynn` - Player Statistics System
+- **stats**: Detailed player information via Wynncraft API v3
 
-### 🔒 権限とレート制限
+### 🔒 Permissions & Rate Limits
 
-- **管理者限定**: `/anni`（全機能）、一部の`/guild`、`/translate`管理機能
-- **レート制限**: 各コマンドに適切な制限が設定済み（30秒〜5分間隔）
-- **API制限**: 外部API（Wynncraft、Wynnventory、DeepL）の制限に準拠
+- **Admin Only**: `/anni` (all functions), selected `/guild` and `/translate` management functions
+- **Rate Limits**: Appropriate limits set for each command (30 seconds to 5 minutes intervals)
+- **API Limits**: Compliant with external API restrictions (Wynncraft, Wynnventory, DeepL)
 
 ## 🔌 API Integration
 
