@@ -30,7 +30,7 @@
 
 ## ✨ Features
 
-### 🎯 Annihilation Event Tracking
+### Annihilation Event Tracking
 - **AI Prediction System**: ARIMA model-based next event time prediction
 - **Smart Countdown**: Automatic timers with confidence ratings
 - **Manual Timer Support**: Traditional tracking methods
@@ -38,38 +38,38 @@
 - **Historical Analysis**: Past event data tracking and analysis
 - **Timezone Support**: JST/UTC compatibility
 
-### 👑 Guild Management
+### Guild Management
 - **Member Rankings**: Track guild member statistics and rankings
 - **Weekly Ranking System**: Automatic reset functionality
 - **Experience Tracking**: XP progress and leaderboards
 - **Wynncraft API v3 Integration**: Real-time data synchronization
 - **SKJ Guild Specialized**: Optimized for "Just Here After Work" guild
 
-### 📊 Player Statistics
+### Player Statistics
 - **Comprehensive Player Stats**: Detailed player information display
 - **Level Progress Visualization**: Visual progress bars
 - **Playtime Tracking**: Monitor player activity
 - **Character Class Information**: Class-specific data
 - **Wynncraft Player API Integration**: Live player data
 
-### 💰 Market Analysis
+### Market Analysis
 - **Trade Market Search**: Wynncraft marketplace integration
 - **Multi-Currency Support**: Emeralds, EB, LE, STX pricing
 - **Rarity Display**: Custom Discord emoji for item rarities
 - **Real-time Market Data**: Wynnventory API integration
 
-### 🗡 Lootrun Information
+### Lootrun Information
 - **Loot Pool Information**: Detailed camp route data
 - **Mythic Item Pricing**: Price rankings and analysis
 - **Market Value Analysis**: Comprehensive pricing insights
 - **Weekly Raid Aspect Pools**: Different rarity support (Mythic, Fabled, Legendary)
 
-### 🌐 Translation Support
+### Translation Support
 - **Bilingual Support**: Japanese/English language support
 - **Message Translation**: Real-time translation capabilities
 - **Language Settings Management**: User preference storage
 
-### 📚 Help System
+### Help System
 - **Interactive Paginated Menus**: Easy navigation
 - **Detailed Command Documentation**: Comprehensive guides
 - **Admin-only Command Sections**: Permission-based access
@@ -84,20 +84,19 @@
 
 ### 🧪 Testing Phase Commands
 - **`anni` commands** - Annihilation event tracking
-  - ⚠️ **Known Issue**: ARIMA model predictions have ~1 hour accuracy variance
-  - 🔄 **Status**: Not yet production-ready
+  - **Known Issue**: ARIMA model predictions have ~1 hour accuracy variance
+  - **Status**: Not yet production-ready
 
 - **`tm` commands** - Trade market search
-  - ⚠️ **Known Issues**: Style integration incomplete, insufficient testing
-  - 🔄 **Status**: Feature development in progress
+  - **Known Issues**: Style integration incomplete, insufficient testing
+  - **Status**: Feature development in progress
 
 - **`translate` commands** - Translation functionality
-  - 🔄 **Status**: Redis implementation planned, private bot features in development
+  - **Status**: Redis implementation planned, private bot features in development
 
-### ⚠️ Unstable Performance
 - **`guild` commands** - Guild management system
-  - ⚠️ **Limitation**: Currently optimized only for "Just Here After Work - SKJ" guild
-  - 🔄 **Status**: Expanding compatibility for other guilds
+  - **Limitation**: Currently optimized only for "[SKJ] Just Here After Work" guild
+  - **Status**: Expanding compatibility for other guilds
 
 ## 📁 Project Structure
 
