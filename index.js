@@ -11,7 +11,8 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessageReactions
     ] 
 });
 
@@ -157,6 +158,42 @@ client.on('interactionCreate', async interaction => {
         } else {
             await interaction.reply(errorMessage);
         }
+    }
+});
+
+// リアクション追加イベント
+client.on('messageReactionAdd', async (reaction, user) => {
+    try {
+        // 部分的なリアクションの場合はフェッチ
+        if (reaction.partial) {
+            await reaction.fetch();
+        }
+        
+        // 翻訳コマンドのリアクション同期処理
+        const translateCommand = client.commands.get('translate');
+        if (translateCommand && translateCommand.handleReactionAdd) {
+            await translateCommand.handleReactionAdd(reaction, user);
+        }
+    } catch (error) {
+        console.error('[ERROR] リアクション追加処理中にエラーが発生しました:', error);
+    }
+});
+
+// リアクション削除イベント
+client.on('messageReactionRemove', async (reaction, user) => {
+    try {
+        // 部分的なリアクションの場合はフェッチ
+        if (reaction.partial) {
+            await reaction.fetch();
+        }
+        
+        // 翻訳コマンドのリアクション同期処理
+        const translateCommand = client.commands.get('translate');
+        if (translateCommand && translateCommand.handleReactionRemove) {
+            await translateCommand.handleReactionRemove(reaction, user);
+        }
+    } catch (error) {
+        console.error('[ERROR] リアクション削除処理中にエラーが発生しました:', error);
     }
 });
 

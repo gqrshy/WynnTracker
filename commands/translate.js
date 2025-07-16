@@ -31,6 +31,7 @@ const DEFAULT_CONFIG = {
 let translationService;
 let settings = {};
 const webhookCache = new Map();
+const translationMessageMap = new Map(); // 原文メッセージID -> 翻訳メッセージIDのマッピング
 
 function loadConfig() {
     try {
@@ -140,11 +141,19 @@ function initialize() {
                             : `https://cdn.discordapp.com/embed/avatars/${parseInt(result.message.author.discriminator) % 5}.png`;
                         
                         // Webhookで翻訳結果を送信
-                        return webhook.send({
+                        const translationMessage = await webhook.send({
                             content: formattedText,
                             username: result.message.author.username,
                             avatarURL: avatarURL
                         });
+                        
+                        // 原文メッセージIDと翻訳メッセージIDをマッピング
+                        translationMessageMap.set(result.message.id, translationMessage.id);
+                        
+                        // 原文メッセージのリアクションを翻訳メッセージにコピー
+                        await copyReactionsToTranslation(result.message, translationMessage);
+                        
+                        return translationMessage;
                     } catch (error) {
                         console.error('[Translation] Failed to send translation:', error);
                     }
@@ -373,6 +382,61 @@ module.exports = {
         if (translationService) {
             await translationService.shutdown();
         }
+    },
+
+    // リアクション追加のハンドラー
+    async handleReactionAdd(reaction, user) {
+        if (user.bot) return;
+        
+        const originalMessageId = reaction.message.id;
+        const channelId = reaction.message.channel.id;
+        
+        // 翻訳メッセージが存在するかチェック
+        const translationMessageId = translationMessageMap.get(originalMessageId);
+        if (!translationMessageId) return;
+        
+        try {
+            // 翻訳メッセージを取得
+            const channel = client.channels.cache.get(channelId);
+            if (!channel) return;
+            
+            const translationMessage = await channel.messages.fetch(translationMessageId);
+            if (!translationMessage) return;
+            
+            // 翻訳メッセージに同じリアクションを追加
+            await translationMessage.react(reaction.emoji);
+        } catch (error) {
+            console.error('[Translation] Failed to sync reaction add:', error);
+        }
+    },
+
+    // リアクション削除のハンドラー
+    async handleReactionRemove(reaction, user) {
+        if (user.bot) return;
+        
+        const originalMessageId = reaction.message.id;
+        const channelId = reaction.message.channel.id;
+        
+        // 翻訳メッセージが存在するかチェック
+        const translationMessageId = translationMessageMap.get(originalMessageId);
+        if (!translationMessageId) return;
+        
+        try {
+            // 翻訳メッセージを取得
+            const channel = client.channels.cache.get(channelId);
+            if (!channel) return;
+            
+            const translationMessage = await channel.messages.fetch(translationMessageId);
+            if (!translationMessage) return;
+            
+            // 翻訳メッセージからリアクションを削除（ボットのリアクションのみ）
+            const translationReaction = translationMessage.reactions.cache.get(reaction.emoji.id || reaction.emoji.name);
+            if (translationReaction && translationReaction.me) {
+                await translationReaction.users.remove(client.user);
+            }
+        } catch (error) {
+            console.error('[Translation] Failed to sync reaction remove:', error);
+        }
     }
 };
 
@@ -589,6 +653,53 @@ async function handleReload(interaction) {
         await interaction.editReply({ embeds: [embed] });
     } catch (error) {
         throw new Error(`設定リロードに失敗しました: ${error.message}`);
+    }
+}
+
+// リアクションをコピーする関数
+async function copyReactionsToTranslation(originalMessage, translationMessage) {
+    try {
+        // 原文メッセージのリアクションを取得
+        const reactions = originalMessage.reactions.cache;
+        
+        for (const reaction of reactions.values()) {
+            // ボットのリアクションはスキップ
+            if (reaction.me) continue;
+            
+            try {
+                // 翻訳メッセージに同じリアクションを追加
+                await translationMessage.react(reaction.emoji);
+            } catch (error) {
+                console.error(`[Translation] Failed to copy reaction ${reaction.emoji.name}:`, error);
+            }
+        }
+    } catch (error) {
+        console.error('[Translation] Failed to copy reactions:', error);
+    }
+}
+
+// リアクション同期のための関数
+async function syncReactionToTranslation(originalMessageId, channelId, emoji, add = true) {
+    try {
+        const translationMessageId = translationMessageMap.get(originalMessageId);
+        if (!translationMessageId) return;
+        
+        // 翻訳メッセージを取得
+        const translationMessage = await client.channels.cache.get(channelId)?.messages.fetch(translationMessageId);
+        if (!translationMessage) return;
+        
+        if (add) {
+            // リアクションを追加
+            await translationMessage.react(emoji);
+        } else {
+            // リアクションを削除
+            const reaction = translationMessage.reactions.cache.get(emoji.id || emoji.name);
+            if (reaction && reaction.me) {
+                await reaction.users.remove(client.user);
+            }
+        }
+    } catch (error) {
+        console.error('[Translation] Failed to sync reaction:', error);
     }
 }
 

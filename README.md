@@ -198,37 +198,94 @@ The `config.js` file allows customization of:
 
 ## 🎮 Usage
 
-### Basic Commands
+### 📋 完全な利用可能コマンド一覧
+
+#### 🌟 一般ユーザー向けコマンド
 
 ```bash
-# Display help menu
+# ヘルプメニューを表示
 /help
 
-# Check player statistics
-/wynn player <username>
+# プレイヤー統計情報を表示
+/wynn stats mcid:<Minecraft_ID>
 
-# Search trade market
-/tm search <item_name>
+# Trade Market検索
+/tm search item:<アイテム名> [unidentified:<true/false>]
 
-# View lootrun information
-/lr camps
+# Lootrun関連情報
+/lr lootpool [page:<1-10>] [camp:<COTL/CP/MH/SI/SE>]
+/lr mythranking
 
-# Guild rankings (SKJ guild)
-/guild rankings
+# レイド関連情報
+/raid aspectpool [rarity:<mythic/fabled/legendary>] [language:<ja/en>]
+
+# ギルドランキング（閲覧）
+/guild gxp ranking
+/guild raid ranking
+
+# テキスト翻訳（DeepL API使用）
+/translate text text:<翻訳テキスト> [to:<言語>] [from:<言語>]
+/translate status
+/translate metrics
+/translate health
 ```
 
-### Admin Commands
+#### 🔐 管理者権限必要コマンド
 
 ```bash
-# Manage Annihilation timers
-/anni set <time>
+# AI予測Annihilationタイマー管理
+/anni timer [timezone:<jst/utc/both>]
+/anni predict
+/anni history [action:<show/reset>] [confirm:<true>]
+/anni record datetime:<YYYY-MM-DD HH:MM:SS> server:<asia/eu/us> [downtime:<true/false>]
+/anni debug
 
-# Guild management
-/guild sync
+# ギルド管理
+/guild rank set
 
-# Translation settings
-/translate settings
+# 翻訳システム管理
+/translate auto enabled:<true/false> [channel:<チャンネル>] [target:<EN-US/JA>]
+/translate cache action:<clear/stats>
+/translate reload
 ```
+
+### 📚 コマンド詳細説明
+
+#### `/anni` - AI予測Annihilationタイマーシステム
+- **timer**: ARIMA モデルと深層学習を組み合わせたAI予測システム
+- **predict**: 複数予測手法による次回イベント予測
+- **history**: 過去イベントデータの管理
+- **record**: 新しいイベント発生の手動記録
+- **debug**: 予測システムの内部状態表示
+
+#### `/guild` - ギルド管理システム（SKJ専用最適化）
+- **rank set**: 現在のギルドメンバー統計を記録
+- **gxp ranking**: 今週のGXPランキング表示
+- **raid ranking**: 今週のレイドランキング表示
+
+#### `/lr` - Lootrun情報システム
+- **lootpool**: 各キャンプの詳細ルートプール情報
+- **mythranking**: Mythicアイテムの市場価格ランキング
+
+#### `/raid` - レイド情報システム
+- **aspectpool**: 今週の各レイドアスペクト情報（多言語対応）
+
+#### `/tm` - Trade Market検索
+- **search**: Wynnventory APIを使用したリアルタイム市場検索
+
+#### `/translate` - 高性能翻訳システム
+- **text**: DeepL APIによる高精度翻訳
+- **auto**: チャンネル単位の自動翻訳設定
+- **status/metrics/health**: システム監視機能
+
+#### `/wynn` - プレイヤー統計システム
+- **stats**: Wynncraft API v3による詳細プレイヤー情報
+
+### 🔒 権限とレート制限
+
+- **管理者限定**: `/anni`（全機能）、一部の`/guild`、`/translate`管理機能
+- **レート制限**: 各コマンドに適切な制限が設定済み（30秒〜5分間隔）
+- **API制限**: 外部API（Wynncraft、Wynnventory、DeepL）の制限に準拠
 
 ## 🔌 API Integration
 

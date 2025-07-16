@@ -540,7 +540,16 @@ async function handleRecord(interaction) {
             .setFooter({ text: `${serverNames[server]} Event Recording System` })
             .setTimestamp();
         
-        await interaction.editReply({ embeds: [embed] });
+        const message = await interaction.editReply({ embeds: [embed] });
+        
+        // 5秒後にメッセージを削除
+        setTimeout(async () => {
+            try {
+                await message.delete();
+            } catch (error) {
+                console.log('[DEBUG] Record message already deleted or not found');
+            }
+        }, 5000);
         
         console.log(`[INFO] Manual event recorded: ${eventTime.toISOString()} (JST: ${datetime}) on ${server} server ${isDowntime ? '(downtime)' : ''} by ${interaction.user.tag}`);
         

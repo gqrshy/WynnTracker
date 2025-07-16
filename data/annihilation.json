@@ -1,18 +1,24 @@
 {
-  "startTime": "2025-07-15T12:21:30.000Z",
+  "startTime": "2025-07-18T15:55:32.641Z",
   "setBy": "auto_sync",
-  "setAt": "2025-07-16T10:31:03.946Z",
-  "confidence": 93,
+  "setAt": "2025-07-16T22:21:08.247Z",
+  "confidence": 90,
   "sources": [
-    "Local"
+    "Local",
+    "ARIMA"
   ],
-  "agreement": 100,
+  "agreement": 94,
   "method": "hybrid",
   "predictions": [
     {
       "source": "Local",
-      "time": "2025-07-15T12:21:30.000Z",
-      "confidence": 86
+      "time": "2025-07-18T16:32:57.680Z",
+      "confidence": 77
+    },
+    {
+      "source": "ARIMA",
+      "time": "2025-07-18T15:25:12.979Z",
+      "confidence": 95
     }
   ]
 }
