@@ -15,19 +15,6 @@
   <img src="https://img.shields.io/badge/-Puppeteer-40B5A4.svg?logo=puppeteer&style=for-the-badge&logoColor=white">
 </p>
 
-## 📋 Table of Contents
-
-1. [Features](#features)
-2. [Command Status](#command-status)
-3. [Project Structure](#project-structure)
-4. [Prerequisites](#prerequisites)
-5. [Installation](#installation)
-6. [Configuration](#configuration)
-7. [Usage](#usage)
-8. [API Integration](#api-integration)
-9. [Troubleshooting](#troubleshooting)
-10. [License](#license)
-
 ## ✨ Features
 
 ### Annihilation Event Tracking
@@ -233,9 +220,7 @@ The `config.js` file manages environment variables and allows:
 
 ## 🎮 Usage
 
-### 📋 Complete Command Reference
-
-#### 🌟 General User Commands
+#### General User Commands
 
 ```bash
 # Display help menu
@@ -265,7 +250,7 @@ The `config.js` file manages environment variables and allows:
 /translate health
 ```
 
-#### 🔐 Administrator Commands
+#### Administrator Commands
 
 ```bash
 # AI-powered Annihilation timer management
@@ -340,20 +325,14 @@ The `config.js` file manages environment variables and allows:
 
 This project is licensed under the **GNU General Public License (GPL)**. 
 
-**You are free to use this code**, but any modifications must be distributed under the same GPL license. This ensures that improvements and modifications remain open source and benefit the entire community.
+**You are free to use this code**, but any modifications must be distributed under the same GPL license.
+This ensures that improvements and modifications remain open source and benefit the entire community.
 
 For more details, see the [LICENSE](LICENSE) file in this repository.
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Guidelines
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## 🙏 Acknowledgments
 
