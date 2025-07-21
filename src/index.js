@@ -5,6 +5,7 @@ const path = require('path');
 const ConfigManager = require('./config/ConfigManager');
 const { ErrorHandler } = require('./utils/ErrorHandler');
 const RateLimiter = require('./utils/RateLimiter');
+const ModNotificationAPI = require('./api/ModNotificationAPI');
 
 // Services
 const PlayerService = require('./services/PlayerService');
@@ -33,6 +34,7 @@ class WynnTrackerBot {
         this.services = new Map();
         this.ready = false;
         this.startTime = new Date();
+        this.modAPI = null;
         
         this.setupEventHandlers();
     }
@@ -139,6 +141,9 @@ class WynnTrackerBot {
         
         // Start periodic tasks
         this.startPeriodicTasks();
+        
+        // Start MOD API server
+        await this.startModAPI();
     }
 
     async onInteractionCreate(interaction) {
@@ -334,6 +339,30 @@ class WynnTrackerBot {
         console.log('✅ Cleanup completed');
     }
 
+    async startModAPI() {
+        try {
+            console.log('🚀 Starting MOD API server...');
+            
+            this.modAPI = new ModNotificationAPI(this.client);
+            const port = this.config.get('modApi.port', 3000);
+            
+            await this.modAPI.start(port);
+            console.log(`✅ MOD API server started on port ${port}`);
+            
+        } catch (error) {
+            console.error('❌ Failed to start MOD API server:', error);
+            // Don't exit, continue without MOD API
+        }
+    }
+
+    async stopModAPI() {
+        if (this.modAPI) {
+            console.log('🔄 Stopping MOD API server...');
+            await this.modAPI.stop();
+            this.modAPI = null;
+        }
+    }
+
     getService(name) {
         return this.services.get(name);
     }
@@ -361,6 +390,9 @@ class WynnTrackerBot {
         console.log('🔄 Shutting down WynnTracker Revival...');
         
         this.ready = false;
+        
+        // Stop MOD API server
+        await this.stopModAPI();
         
         // Cleanup services
         for (const [name, service] of this.services) {
