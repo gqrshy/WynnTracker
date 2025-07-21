@@ -1,0 +1,170 @@
+{
+  "asia_1745735428000": {
+    "server": "asia",
+    "timestamp": "2025-04-27T06:30:28.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1745993268000": {
+    "server": "asia",
+    "timestamp": "2025-04-30T06:07:48.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1746261480000": {
+    "server": "asia",
+    "timestamp": "2025-05-03T08:38:00.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1746536369000": {
+    "server": "asia",
+    "timestamp": "2025-05-06T12:59:29.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1746804786000": {
+    "server": "asia",
+    "timestamp": "2025-05-09T15:33:06.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1747068314000": {
+    "server": "asia",
+    "timestamp": "2025-05-12T16:45:14.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1747361651000": {
+    "server": "asia",
+    "timestamp": "2025-05-16T02:14:11.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1747640530000": {
+    "server": "asia",
+    "timestamp": "2025-05-19T07:42:10.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1747918636000": {
+    "server": "asia",
+    "timestamp": "2025-05-22T12:57:16.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1748209830000": {
+    "server": "asia",
+    "timestamp": "2025-05-25T21:50:30.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1748500020000": {
+    "server": "asia",
+    "timestamp": "2025-05-29T06:27:00.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1748795110000": {
+    "server": "asia",
+    "timestamp": "2025-06-01T16:25:10.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1749074708000": {
+    "server": "asia",
+    "timestamp": "2025-06-04T22:05:08.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1749352290000": {
+    "server": "asia",
+    "timestamp": "2025-06-08T03:11:30.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1749612484000": {
+    "server": "asia",
+    "timestamp": "2025-06-11T03:28:04.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1749888540000": {
+    "server": "asia",
+    "timestamp": "2025-06-14T08:09:00.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1750157340000": {
+    "server": "asia",
+    "timestamp": "2025-06-17T10:49:00.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1750423313000": {
+    "server": "asia",
+    "timestamp": "2025-06-20T12:41:53.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1750712047000": {
+    "server": "asia",
+    "timestamp": "2025-06-23T20:54:07.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1750991398000": {
+    "server": "asia",
+    "timestamp": "2025-06-27T02:29:58.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  },
+  "asia_1752582495000": {
+    "server": "asia",
+    "timestamp": "2025-07-15T12:28:15.000Z",
+    "source": "manual_asia",
+    "confidence": 100,
+    "downtime": false,
+    "verified": false
+  }
+}

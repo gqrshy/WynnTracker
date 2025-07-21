@@ -1,0 +1,51 @@
+{
+  "name": "wynntracker-revival",
+  "version": "2.0.0",
+  "description": "A comprehensive Discord bot for Wynncraft players and guilds",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "prod": "pm2 start ecosystem.config.js --env production",
+    "prod:stop": "pm2 stop wynntracker-revival",
+    "prod:restart": "pm2 restart wynntracker-revival",
+    "prod:reload": "pm2 reload wynntracker-revival",
+    "prod:logs": "pm2 logs wynntracker-revival",
+    "prod:monit": "pm2 monit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "deploy-commands": "node scripts/deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.0.0",
+    "axios": "^1.7.0",
+    "winston": "^3.13.0",
+    "dotenv": "^16.4.0",
+    "node-cron": "^3.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "wynncraft",
+    "minecraft",
+    "mmorpg",
+    "guild",
+    "tracker"
+  ],
+  "author": "WynnTracker Revival Team",
+  "license": "MIT"
+}

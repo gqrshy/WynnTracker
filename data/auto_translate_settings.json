@@ -1,0 +1,14 @@
+{
+  "1391739934490099834": {
+    "enabled": true,
+    "sourceLang": "ja",
+    "targetLang": "EN-US",
+    "enabledAt": "2025-07-19T13:08:16.103Z",
+    "enabledBy": "661187451913633844",
+    "options": {
+      "bidirectional": true,
+      "reactions": true,
+      "minLength": 3
+    }
+  }
+}

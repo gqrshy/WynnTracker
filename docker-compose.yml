@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  wynntracker-revival:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wynntracker-revival
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - wynntracker-network
+    # Optional: expose port for health checks
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check - Bot running')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+networks:
+  wynntracker-network:
+    driver: bridge
