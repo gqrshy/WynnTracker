@@ -102,6 +102,11 @@ class ConfigManager {
             server: {
                 port: parseInt(process.env.SERVER_PORT) || 3000,
                 timeout: parseInt(process.env.API_TIMEOUT) || 10000
+            },
+            modApi: {
+                port: parseInt(process.env.MOD_API_PORT) || 3000,
+                token: process.env.MOD_BOT_TOKEN,
+                channelId: process.env.BOMB_NOTIFICATION_CHANNEL_ID
             }
         };
     }
@@ -118,7 +123,9 @@ class ConfigManager {
             throw new Error(`Missing required configuration: ${missing.join(', ')}`);
         }
 
-        if (this.config.apis.deepl.key && !this.isValidDeepLApiKey(this.config.apis.deepl.key)) {
+        if (this.config.apis.deepl.key && 
+            this.config.apis.deepl.key !== '***REDACTED***' && 
+            !this.isValidDeepLApiKey(this.config.apis.deepl.key)) {
             throw new Error('Invalid DeepL API key format');
         }
 
