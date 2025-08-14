@@ -5,7 +5,7 @@ const path = require('path');
 const ConfigManager = require('./config/ConfigManager');
 const { ErrorHandler } = require('./utils/ErrorHandler');
 const RateLimiter = require('./utils/RateLimiter');
-const ModNotificationAPI = require('./api/ModNotificationAPI');
+const APIServer = require('./api/server');
 
 // Services
 const PlayerService = require('./services/PlayerService');
@@ -34,7 +34,7 @@ class WynnTrackerBot {
         this.services = new Map();
         this.ready = false;
         this.startTime = new Date();
-        this.modAPI = null;
+        this.apiServer = null;
         
         this.setupEventHandlers();
     }
@@ -99,6 +99,12 @@ class WynnTrackerBot {
                 
                 if (typeof CommandClass.create === 'function') {
                     const command = CommandClass.create();
+                    
+                    // AnniCommand の場合は遅延初期化を設定
+                    if (command.constructor.name === 'AnniCommand') {
+                        command.needsLazyInit = true;
+                    }
+                    
                     this.commands.set(command.data.name, command);
                     console.log(`  ✅ Loaded command: ${command.data.name}`);
                 } else {
@@ -142,41 +148,47 @@ class WynnTrackerBot {
         // Start periodic tasks
         this.startPeriodicTasks();
         
-        // Start MOD API server
-        await this.startModAPI();
+        // Start API server
+        await this.startAPIServer();
     }
 
     async onInteractionCreate(interaction) {
-        if (!interaction.isChatInputCommand()) return;
-        
-        const command = this.commands.get(interaction.commandName);
-        
-        if (!command) {
-            console.warn(`Unknown command: ${interaction.commandName}`);
-            return;
+        // Handle slash commands
+        if (interaction.isChatInputCommand()) {
+            const command = this.commands.get(interaction.commandName);
+            
+            if (!command) {
+                console.warn(`Unknown command: ${interaction.commandName}`);
+                return;
+            }
+            
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                const errorResponse = this.errorHandler.handle(error, {
+                    command: interaction.commandName,
+                    userId: interaction.user.id,
+                    guildId: interaction.guild?.id
+                });
+                
+                console.error('Command execution error:', error);
+                
+                const reply = {
+                    content: `❌ ${errorResponse.message}`,
+                    ephemeral: true
+                };
+                
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp(reply);
+                } else {
+                    await interaction.reply(reply);
+                }
+            }
         }
         
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            const errorResponse = this.errorHandler.handle(error, {
-                command: interaction.commandName,
-                userId: interaction.user.id,
-                guildId: interaction.guild?.id
-            });
-            
-            console.error('Command execution error:', error);
-            
-            const reply = {
-                content: `❌ ${errorResponse.message}`,
-                ephemeral: true
-            };
-            
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp(reply);
-            } else {
-                await interaction.reply(reply);
-            }
+        // Handle button interactions
+        if (interaction.isButton()) {
+            await this.handleButtonInteraction(interaction);
         }
     }
 
@@ -339,27 +351,104 @@ class WynnTrackerBot {
         console.log('✅ Cleanup completed');
     }
 
-    async startModAPI() {
+    async handleButtonInteraction(interaction) {
+        const customId = interaction.customId;
+        
+        if (customId.startsWith('join_server_')) {
+            const server = customId.replace('join_server_', '');
+            await this.handleJoinServer(interaction, server);
+        } else if (customId.startsWith('bomb_details_')) {
+            const timestamp = customId.replace('bomb_details_', '');
+            await this.handleBombDetails(interaction, timestamp);
+        } else if (customId.startsWith('set_reminder_')) {
+            const timestamp = customId.replace('set_reminder_', '');
+            await this.handleSetReminder(interaction, timestamp);
+        } else if (customId === 'anni_notify_again') {
+            // Existing annihilation notification button
+            try {
+                await interaction.reply({
+                    content: '🔔 再通知を設定しました。イベント開始5分前に再度お知らせします。',
+                    ephemeral: true
+                });
+            } catch (error) {
+                console.error('Button interaction error:', error);
+                await interaction.reply({
+                    content: '❌ 再通知の設定に失敗しました。',
+                    ephemeral: true
+                });
+            }
+        }
+    }
+    
+    async handleJoinServer(interaction, server) {
+        const serverUrl = `https://wynncraft.com/servers/${server.toLowerCase()}`;
+        
+        await interaction.reply({
+            content: `🎮 サーバー ${server} に参加: ${serverUrl}`,
+            ephemeral: true
+        });
+    }
+    
+    async handleBombDetails(interaction, timestamp) {
         try {
-            console.log('🚀 Starting MOD API server...');
+            const BombBellService = require('./services/bombbell/BombBellService');
+            const bombService = new BombBellService(this.client, this.config);
             
-            this.modAPI = new ModNotificationAPI(this.client);
-            const port = this.config.get('modApi.port', 3000);
+            const details = await bombService.getBombDetails(parseInt(timestamp));
             
-            await this.modAPI.start(port);
-            console.log(`✅ MOD API server started on port ${port}`);
+            if (details) {
+                await interaction.reply({
+                    content: `📋 **ボム詳細:**\n\`\`\`json\n${JSON.stringify(details, null, 2)}\`\`\``,
+                    ephemeral: true
+                });
+            } else {
+                await interaction.reply({
+                    content: '❌ ボムの詳細が見つかりませんでした。',
+                    ephemeral: true
+                });
+            }
+        } catch (error) {
+            console.error('Bomb details error:', error);
+            await interaction.reply({
+                content: '❌ ボム詳細の取得に失敗しました。',
+                ephemeral: true
+            });
+        }
+    }
+    
+    async handleSetReminder(interaction, timestamp) {
+        await interaction.reply({
+            content: '⏰ リマインダー機能は近日実装予定です！',
+            ephemeral: true
+        });
+    }
+
+    async startAPIServer() {
+        if (!this.config.get('api.enabled', false)) {
+            console.log('📝 API server is disabled in configuration');
+            return;
+        }
+        
+        try {
+            console.log('🚀 Starting API server...');
+            
+            this.apiServer = new APIServer(this.client, this.config);
+            const port = this.config.get('api.port', 3000);
+            
+            await this.apiServer.start(port);
+            console.log(`✅ API server started on port ${port}`);
             
         } catch (error) {
-            console.error('❌ Failed to start MOD API server:', error);
-            // Don't exit, continue without MOD API
+            console.error('❌ Failed to start API server:', error);
+            // Don't exit, continue without API server
         }
     }
 
-    async stopModAPI() {
-        if (this.modAPI) {
-            console.log('🔄 Stopping MOD API server...');
-            await this.modAPI.stop();
-            this.modAPI = null;
+    async stopAPIServer() {
+        if (this.apiServer) {
+            console.log('🔄 Stopping API server...');
+            await this.apiServer.stop();
+            this.apiServer = null;
         }
     }
 
@@ -391,8 +480,8 @@ class WynnTrackerBot {
         
         this.ready = false;
         
-        // Stop MOD API server
-        await this.stopModAPI();
+        // Stop API server
+        await this.stopAPIServer();
         
         // Cleanup services
         for (const [name, service] of this.services) {

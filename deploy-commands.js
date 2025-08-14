@@ -7,7 +7,7 @@ const commands = [];
 
 // Load all commands from the commands directory
 const commandsPath = path.join(__dirname, 'src', 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && !file.startsWith('Base'));
 
 for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);

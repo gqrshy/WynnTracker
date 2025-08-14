@@ -1,1 +1,32 @@
-{}
+{
+  "timestamp": 1754843861451,
+  "next": {
+    "datetime_utc": 1755037290857.1428,
+    "predicted": true,
+    "confidence": 0.95,
+    "method": "statistical",
+    "model_info": {
+      "predicted_interval_ms": 274890857.14285713,
+      "predicted_interval_hours": 76.35857142857142,
+      "data_points": 107,
+      "variability": 0.03890748264660381
+    }
+  },
+  "statistical": {
+    "datetime_utc": 1755037290857.1428,
+    "predicted": true,
+    "confidence": 0.95,
+    "method": "statistical",
+    "model_info": {
+      "predicted_interval_ms": 274890857.14285713,
+      "predicted_interval_hours": 76.35857142857142,
+      "data_points": 107,
+      "variability": 0.03890748264660381
+    }
+  },
+  "model_info": {
+    "data_points": 107,
+    "last_event": 1754762400000,
+    "prediction_method": "statistical_fallback"
+  }
+}

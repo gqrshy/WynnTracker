@@ -4,7 +4,7 @@ const ConfigManager = require('../config/ConfigManager');
 
 class WynnventoryAPIClient extends BaseAPIClient {
     constructor(options = {}) {
-        const baseURL = options.baseURL || 'https://wynnventory.com/api';
+        const baseURL = options.baseURL || 'https://www.wynnventory.com/api';
         const configManager = ConfigManager.getInstance();
         const apiKey = options.apiKey || configManager.get('apis.wynnventory.key');
         
@@ -135,6 +135,42 @@ class WynnventoryAPIClient extends BaseAPIClient {
             });
 
             return this.normalizeRaidData(response.data);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getRaidPoolData(options = {}) {
+        const endpoint = '/raidpool/items';
+        const params = {
+            ...options.params
+        };
+
+        try {
+            const response = await this.get(endpoint, params, {
+                cacheTtl: 1800000, // 30 minutes cache
+                ...options
+            });
+
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getCurrentGambits(options = {}) {
+        const endpoint = '/raidpool/gambits/current';
+        const params = {
+            ...options.params
+        };
+
+        try {
+            const response = await this.get(endpoint, params, {
+                cacheTtl: 1800000, // 30 minutes cache
+                ...options
+            });
+
+            return response.data;
         } catch (error) {
             throw error;
         }

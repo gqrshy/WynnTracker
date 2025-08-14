@@ -109,13 +109,25 @@ class GuildService extends BaseService {
                     if (typeof rankMembers === 'object' && rankMembers !== null) {
                         for (const [playerName, playerData] of Object.entries(rankMembers)) {
                             try {
+                                // Fetch individual player data for raids information
+                                let playerApiData = null;
+                                try {
+                                    this.debug(`Fetching player data for ${playerName}...`);
+                                    playerApiData = await this.wynncraftApi.getPlayer(playerName, { fullResult: true });
+                                    await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to avoid rate limits
+                                } catch (playerError) {
+                                    this.warn(`プレイヤー ${playerName} のAPIデータ取得エラー:`, playerError.message);
+                                }
+                                
                                 updatedMembers[playerData.uuid] = {
                                     uuid: playerData.uuid,
                                     username: playerName,
                                     contributed: playerData.contributed || 0,
                                     contributionRank: playerData.contributionRank || 0,
-                                    wars: 0,
-                                    raids: { total: 0, list: {} },
+                                    wars: playerApiData?.globalData?.wars?.total || 0,
+                                    globalData: {
+                                        raids: playerApiData?.globalData?.raids || { total: 0, list: {} }
+                                    },
                                     joined: playerData.joined || null,
                                     rank: rank,
                                     online: playerData.online || false,
@@ -163,7 +175,9 @@ class GuildService extends BaseService {
                     contributed: member?.contributed || 0,
                     contributionRank: member?.contributionRank || 0,
                     wars: member?.wars || 0,
-                    raids: member?.raids || { total: 0, list: {} },
+                    globalData: {
+                        raids: member?.globalData?.raids || { total: 0, list: {} }
+                    },
                     joined: member?.joined || null
                 };
             }
@@ -247,10 +261,10 @@ class GuildService extends BaseService {
                 
                 let raidsCompleted = 0;
                 const username = currentMember.username || 'Unknown';
-                const currentTotal = currentMember.raids?.total || 0;
+                const currentTotal = currentMember.globalData?.raids?.total || 0;
                 
                 if (savedMember) {
-                    const savedRaids = savedMember.raids?.total || 0;
+                    const savedRaids = savedMember.globalData?.raids?.total || 0;
                     raidsCompleted = currentTotal - savedRaids;
                 } else {
                     raidsCompleted = currentTotal;

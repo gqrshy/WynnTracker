@@ -2,6 +2,8 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { EmbedBuilder } = require('discord.js');
 const Logger = require('../utils/Logger');
+const fs = require('fs').promises;
+const path = require('path');
 
 /**
  * MOD通知用API
@@ -12,6 +14,7 @@ class ModNotificationAPI {
         this.app = express();
         this.client = discordClient;
         this.logger = new Logger('ModNotificationAPI');
+        this.configPath = path.join(__dirname, '../../data/tracker_config.json');
         
         this.setupMiddleware();
         this.setupRoutes();
@@ -55,7 +58,8 @@ class ModNotificationAPI {
                     serverName, 
                     bombType, 
                     timestamp,
-                    botToken 
+                    botToken,
+                    channelId // MODが送信するchannelIdも受け入れる
                 } = req.body;
 
                 this.logger.info('Bomb notification received:', { playerName, serverName, bombType });
@@ -67,10 +71,25 @@ class ModNotificationAPI {
                     });
                 }
 
-                // BOTトークン認証（オプション）
-                if (process.env.MOD_BOT_TOKEN && botToken !== process.env.MOD_BOT_TOKEN) {
-                    this.logger.warn('Invalid bot token from MOD');
-                    return res.status(401).json({ error: 'Unauthorized' });
+                // BOTトークン認証（Authorizationヘッダーとボディの両方をサポート）
+                const authHeader = req.headers.authorization;
+                let isAuthorized = false;
+                
+                if (process.env.MOD_BOT_TOKEN) {
+                    // Authorizationヘッダーから取得
+                    if (authHeader && authHeader.startsWith('Bearer ')) {
+                        const headerToken = authHeader.substring(7);
+                        isAuthorized = headerToken === process.env.MOD_BOT_TOKEN;
+                    }
+                    // ボディから取得
+                    if (!isAuthorized && botToken) {
+                        isAuthorized = botToken === process.env.MOD_BOT_TOKEN;
+                    }
+                    
+                    if (!isAuthorized) {
+                        this.logger.warn('Invalid bot token from MOD');
+                        return res.status(401).json({ error: 'Unauthorized' });
+                    }
                 }
 
                 // Discord通知送信
@@ -91,6 +110,14 @@ class ModNotificationAPI {
             }
         });
 
+        // 別名のエンドポイント（MODのデフォルト設定用）
+        this.app.post('/api/bomb-notification', async (req, res) => {
+            // /api/bombと同じ処理
+            return this.app._router.stack.find(r => 
+                r.route && r.route.path === '/api/bomb' && r.route.methods.post
+            ).route.stack[0].handle(req, res);
+        });
+
         // エラーハンドラー
         this.app.use((error, req, res, next) => {
             this.logger.error('Express error:', error);
@@ -100,10 +127,10 @@ class ModNotificationAPI {
 
     async sendBombNotification(playerName, serverName, bombType, timestamp) {
         try {
-            // 環境変数からチャンネルIDを取得
-            const channelId = process.env.BOMB_NOTIFICATION_CHANNEL_ID;
+            // 設定ファイルまたは環境変数からチャンネルIDを取得
+            const channelId = await this.getBombNotificationChannelId();
             if (!channelId) {
-                this.logger.warn('BOMB_NOTIFICATION_CHANNEL_ID not configured');
+                this.logger.warn('Bomb notification channel not configured');
                 return;
             }
 
@@ -147,6 +174,24 @@ class ModNotificationAPI {
         };
 
         return configs[bombType] || configs['default'];
+    }
+
+    async getBombNotificationChannelId() {
+        try {
+            // 1. 設定ファイルから取得を試行
+            const configData = await fs.readFile(this.configPath, 'utf8');
+            const config = JSON.parse(configData);
+            
+            if (config.bombNotificationChannelId) {
+                return config.bombNotificationChannelId;
+            }
+        } catch (error) {
+            // 設定ファイルが存在しないか読み取りエラー
+            this.logger.debug('Config file not found or invalid, falling back to environment variable');
+        }
+
+        // 2. 環境変数から取得（フォールバック）
+        return process.env.BOMB_NOTIFICATION_CHANNEL_ID || null;
     }
 
     start(port = 3000) {

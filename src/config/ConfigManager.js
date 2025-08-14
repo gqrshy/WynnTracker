@@ -34,7 +34,7 @@ class ConfigManager {
                 },
                 wynnventory: {
                     key: process.env.WYNNVENTORY_API_KEY,
-                    baseUrl: 'https://wynnventory.com/api',
+                    baseUrl: 'https://www.wynnventory.com/api',
                     timeout: 10000
                 }
             },
@@ -103,10 +103,29 @@ class ConfigManager {
                 port: parseInt(process.env.SERVER_PORT) || 3000,
                 timeout: parseInt(process.env.API_TIMEOUT) || 10000
             },
-            modApi: {
-                port: parseInt(process.env.MOD_API_PORT) || 3000,
-                token: process.env.MOD_BOT_TOKEN,
-                channelId: process.env.BOMB_NOTIFICATION_CHANNEL_ID
+            api: {
+                enabled: process.env.API_ENABLED === 'true',
+                port: parseInt(process.env.API_PORT) || 3000,
+                secretKey: process.env.API_SECRET_KEY,
+                validTokens: process.env.SKJMOD_VALID_TOKENS ? 
+                    process.env.SKJMOD_VALID_TOKENS.split(',').map(token => token.trim()) : [],
+                rateLimit: {
+                    windowMs: 60000,
+                    max: 100
+                }
+            },
+            channels: {
+                na_bombbell: process.env.NA_BOMBBELL_CHANNEL,
+                eu_bombbell: process.env.EU_BOMBBELL_CHANNEL,
+                as_bombbell: process.env.AS_BOMBBELL_CHANNEL,
+                sa_bombbell: process.env.SA_BOMBBELL_CHANNEL,
+                general_bombbell: process.env.GENERAL_BOMBBELL_CHANNEL
+            },
+            features: {
+                enableActionButtons: process.env.ENABLE_ACTION_BUTTONS === 'true',
+                autoDeleteMessages: process.env.AUTO_DELETE_MESSAGES === 'true',
+                enableStatistics: process.env.ENABLE_STATISTICS === 'true',
+                enableHistory: process.env.ENABLE_HISTORY === 'true'
             }
         };
     }
@@ -236,6 +255,12 @@ class ConfigManager {
         }
         if (safeConfig.apis?.wynnventory?.key) {
             safeConfig.apis.wynnventory.key = '***REDACTED***';
+        }
+        if (safeConfig.api?.secretKey) {
+            safeConfig.api.secretKey = '***REDACTED***';
+        }
+        if (safeConfig.api?.validTokens) {
+            safeConfig.api.validTokens = safeConfig.api.validTokens.map(() => '***REDACTED***');
         }
 
         return safeConfig;

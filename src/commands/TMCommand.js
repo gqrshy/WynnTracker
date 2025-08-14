@@ -54,8 +54,9 @@ class TMCommand extends BaseCommand {
         );
         
         if (!rateLimitCheck.allowed) {
+            const waitTime = Math.ceil(rateLimitCheck.retryAfter);
             await interaction.reply({
-                content: `⏳ このコマンドは30秒に1回しか使用できます。\nあと **${rateLimitCheck.retryAfter}秒** お待ちください。`,
+                content: `⏳ このコマンドは30秒に1回しか使用できません。\nあと **${waitTime}秒** お待ちください。`,
                 ephemeral: true
             });
             return;
@@ -129,8 +130,9 @@ class TMCommand extends BaseCommand {
         
         // 最安出品リスト
         const listingText = this.formatListings(items);
+        const displayCount = Math.min(items.length, 5);
         embed.addFields({
-            name: '💰 最安の出品（5件）',
+            name: `💰 最安の出品（${displayCount}件）`,
             value: listingText || '出品情報なし',
             inline: false
         });

@@ -142,7 +142,7 @@ class HelpCommand extends BaseCommand {
                 fields: [
                     {
                         name: '📖 利用可能なコマンド',
-                        value: '• `/lr` - ルートラン関連コマンド\n• `/raid` - レイド関連コマンド\n• `/tm` - Trade Market検索\n• `/wynn` - プレイヤー統計情報\n• `/guild` - ギルド関連コマンド\n• `/translate` - 翻訳機能\n• `/help` - このヘルプ画面',
+                        value: '• `/lr` - ルートラン関連コマンド\n• `/raid` - レイド関連コマンド\n• `/tm` - Trade Market検索\n• `/wynn` - プレイヤー統計情報\n• `/guild` - ギルド関連コマンド\n• `/anni` - Annihilationカウントダウン\n• `/translate` - 翻訳機能\n• `/help` - このヘルプ画面',
                         inline: false
                     },
                     {
@@ -279,6 +279,28 @@ class HelpCommand extends BaseCommand {
                     }
                 ],
                 color: 0x0099ff
+            },
+            {
+                title: '🔥 /anni コマンド - Annihilationイベント',
+                description: 'Annihilationワールドイベントのカウントダウンと予測を提供します。',
+                fields: [
+                    {
+                        name: '▶️ `/anni start`',
+                        value: 'カウントダウンタイマーを開始\n3分ごとに自動更新されるリアルタイム表示\n**オプション:** `notify_role` (通知ロール)',
+                        inline: false
+                    },
+                    {
+                        name: '🕒 `/anni next`',
+                        value: '次のAnnihilation予測を一度だけ表示\n確定/予測中/推定の状態表示',
+                        inline: false
+                    },
+                    {
+                        name: '📅 データソース',
+                        value: 'GitHub: AiverAiva/anni-pred\n12時間前確定データ + AI予測\n30分ごとの確定データチェック',
+                        inline: false
+                    }
+                ],
+                color: 0xff6600
             }
         ];
 
@@ -291,7 +313,7 @@ class HelpCommand extends BaseCommand {
                 fields: [
                     {
                         name: '📖 利用可能なコマンド',
-                        value: '• `/lr` - ルートラン関連コマンド\n• `/raid` - レイド関連コマンド\n• `/tm` - Trade Market検索\n• `/wynn` - プレイヤー統計情報\n• `/guild` - ギルド関連コマンド\n• `/translate` - 翻訳機能\n• `/anni` - AI予測Annihilationタイマー（管理者限定）\n• `/help` - このヘルプ画面',
+                        value: '• `/lr` - ルートラン関連コマンド\n• `/raid` - レイド関連コマンド\n• `/tm` - Trade Market検索\n• `/wynn` - プレイヤー統計情報\n• `/guild` - ギルド関連コマンド\n• `/anni` - Annihilationカウントダウン\n• `/translate` - 翻詳機能\n• `/help` - このヘルプ画面',
                         inline: false
                     },
                     {
@@ -304,48 +326,36 @@ class HelpCommand extends BaseCommand {
             },
             ...userPages.slice(1), // 残りのページ
             {
-                title: '🤖 /anni - AI予測Annihilationタイマー（管理者限定）',
-                description: 'Annihilationイベントの高精度AI予測システム。',
+                title: '🔥 /anni - Annihilationカウントダウン',
+                description: 'Annihilationイベントのカウントダウン機能（AiverAiva/anni-predデータ使用）',
                 fields: [
                     {
-                        name: '🎯 `/anni timer`',
-                        value: 'AI予測による自動更新タイマー\n10秒ごと更新・信頼度表示\n🎯高精度 🤖中精度 ⚠️低精度\n**オプション:** `timezone` (jst/utc/both)',
+                        name: '▶️ `/anni start`',
+                        value: 'カウントダウンタイマーを開始\n3分ごとに自動更新\n**オプション:** `notify_role` (通知ロール)\n✨ 確定/🔮 予測中/❓ 推定',
                         inline: false
                     },
                     {
-                        name: '📊 `/anni predict`',
-                        value: '次回Annihilationの詳細予測\n予測時刻・信頼度・手法表示',
+                        name: '⏹️ `/anni stop`',
+                        value: 'カウントダウンタイマーを停止',
                         inline: false
                     },
                     {
-                        name: '📝 `/anni record`',
-                        value: 'イベント発生を手動記録\n予測精度向上のためのデータ収集',
+                        name: '🕒 `/anni next`',
+                        value: '次のAnnihilation予測を表示\n一回限りの予測情報',
+                        inline: false
+                    },
+                    {
+                        name: '📊 `/anni accuracy`',
+                        value: '予測精度を評価\n過去データの統計分析',
+                        inline: false
+                    },
+                    {
+                        name: '🔔 通知機能',
+                        value: '12時間前・45分前にロールメンション\n再通知ボタン付き',
                         inline: false
                     }
                 ],
                 color: 0x00FF88
-            },
-            {
-                title: '🧠 AI予測システム - 管理機能',
-                description: 'システム管理者用の高度な機能です。',
-                fields: [
-                    {
-                        name: '📝 データ管理コマンド',
-                        value: '`/anni history` 履歴表示\n`/anni analyze` 統計分析\n`/anni import` データ取込\n`/anni compare` 予測比較',
-                        inline: false
-                    },
-                    {
-                        name: '🔧 システム管理',
-                        value: '`/anni reset` キャッシュリセット\n`/anni debug` デバッグ情報\n`/anni alert` 通知設定',
-                        inline: false
-                    },
-                    {
-                        name: '🎯 予測システムの特徴',
-                        value: '統計予測・ARIMA機械学習モデル\nハイブリッド統合判定\n自動学習による精度向上',
-                        inline: false
-                    }
-                ],
-                color: 0x9932CC
             }
         ];
 

@@ -2,6 +2,8 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const BaseCommand = require('./BaseCommand');
 const WynnventoryAPIClient = require('../api/WynnventoryAPIClient');
 const RateLimiter = require('../utils/RateLimiter');
+const fs = require('fs');
+const path = require('path');
 
 class RaidCommand extends BaseCommand {
     constructor() {
@@ -14,6 +16,7 @@ class RaidCommand extends BaseCommand {
         this.wynnventoryAPI = new WynnventoryAPIClient();
         this.rateLimiter = new RateLimiter();
         this.aspectsData = this.loadAspectsData();
+        this.gambitsData = this.loadGambitsData();
     }
 
     addOptions(command) {
@@ -258,7 +261,7 @@ class RaidCommand extends BaseCommand {
 
     async getRaidPoolData() {
         try {
-            const response = await this.wynnventoryAPI.getRaidData();
+            const response = await this.wynnventoryAPI.getRaidPoolData();
             
             if (response) {
                 if (Array.isArray(response)) {
@@ -279,7 +282,7 @@ class RaidCommand extends BaseCommand {
 
     async getCurrentGambits() {
         try {
-            const response = await this.wynnventoryAPI.getGambitsData();
+            const response = await this.wynnventoryAPI.getCurrentGambits();
             
             if (response && response.gambits) {
                 return response.gambits;
@@ -444,9 +447,59 @@ class RaidCommand extends BaseCommand {
     }
 
     formatGambitDescription(description, language = 'en') {
-        // Simple formatting for now
-        const wrappedText = this.wrapText(description);
-        return wrappedText;
+        // Get gambit translation from data
+        const gambitData = this.getGambitTranslation(description);
+        
+        if (gambitData) {
+            return this.formatGambitText(gambitData, language);
+        }
+        
+        // Fallback to pattern matching for legacy system
+        if (this.gambitsData && this.gambitsData.patterns) {
+            for (const [pattern, translation] of Object.entries(this.gambitsData.patterns)) {
+                const regexPattern = pattern
+                    .replace(/\{[XYZ]\}/g, '(\\d+\\.?\\d*)')
+                    .replace(/\\\+/g, '\\+')
+                    .replace(/\\\*/g, '.*');
+                
+                const regex = new RegExp(regexPattern);
+                const match = description.match(regex);
+                
+                if (match) {
+                    let translatedText = translation;
+                    for (let i = 1; i < match.length; i++) {
+                        translatedText = translatedText.replace(`{${String.fromCharCode(87 + i)}}`, match[i]);
+                    }
+                    return this.formatGambitText({ ja: translatedText, en: description }, language);
+                }
+            }
+        }
+        
+        // If no translation found, return original
+        return this.formatGambitText({ ja: description, en: description }, language);
+    }
+
+    getGambitTranslation(gambitText) {
+        if (!this.gambitsData || !this.gambitsData.gambits) {
+            return null;
+        }
+        return this.gambitsData.gambits[gambitText] || null;
+    }
+
+    formatGambitText(gambitData, language) {
+        const wrappedTextJa = this.wrapText(gambitData.ja);
+        const wrappedTextEn = this.wrapText(gambitData.en);
+        
+        switch (language) {
+            case 'ja':
+                return wrappedTextJa;
+            case 'en':
+                return wrappedTextEn;
+            case 'both':
+                return `${wrappedTextJa}\n　　　${wrappedTextEn}`;
+            default:
+                return wrappedTextEn;
+        }
     }
 
     wrapText(text, maxWidth = 50) {
@@ -481,15 +534,19 @@ class RaidCommand extends BaseCommand {
     }
 
     loadAspectsData() {
-        // Mock aspects data - in real implementation would load from JSON file
+        try {
+            const dataPath = path.join(__dirname, '..', '..', 'data', 'aspects.json');
+            if (fs.existsSync(dataPath)) {
+                const rawData = fs.readFileSync(dataPath, 'utf8');
+                return JSON.parse(rawData);
+            }
+        } catch (error) {
+            console.error('Error loading aspects data:', error);
+        }
+        
+        // Fallback data if file not found
         return {
-            aspect_class_mapping: {
-                'Aspect of the Warrior': 'Warrior',
-                'Aspect of the Mage': 'Mage',
-                'Aspect of the Archer': 'Archer',
-                'Aspect of the Assassin': 'Assassin',
-                'Aspect of the Shaman': 'Shaman'
-            },
+            aspect_class_mapping: {},
             class_keywords: {
                 'Warrior': ['Warrior', 'Strength'],
                 'Mage': ['Mage', 'Intelligence'],
@@ -497,12 +554,25 @@ class RaidCommand extends BaseCommand {
                 'Assassin': ['Assassin', 'Agility'],
                 'Shaman': ['Shaman', 'Defense']
             },
-            aspects: {
-                'Aspect of the Warrior': {
-                    ja: '戦士の力を高める',
-                    en: 'Enhances warrior abilities'
-                }
+            aspects: {}
+        };
+    }
+
+    loadGambitsData() {
+        try {
+            const dataPath = path.join(__dirname, '..', '..', 'data', 'gambits.json');
+            if (fs.existsSync(dataPath)) {
+                const rawData = fs.readFileSync(dataPath, 'utf8');
+                return JSON.parse(rawData);
             }
+        } catch (error) {
+            console.error('Error loading gambits data:', error);
+        }
+        
+        return {
+            gambit_names: {},
+            gambits: {},
+            patterns: {}
         };
     }
 

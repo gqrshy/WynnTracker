@@ -55,10 +55,12 @@
       "Bash(curl:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm restart)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(npm install)"
     ],
     "deny": [
       "Bash(git:*)"
     ]
-  }
+  },
+  "$schema": "https://json.schemastore.org/claude-code-settings.json"
 }
