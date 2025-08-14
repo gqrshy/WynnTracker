@@ -52,6 +52,7 @@ jspm_packages/
 # IDE files
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
